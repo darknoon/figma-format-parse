@@ -8,36 +8,43 @@ import {
   prettyPrintSchema,
 } from "kiwi-schema";
 import schema from "./schema";
-import { deflateRaw, inflateRaw } from "pako";
+import { Schema as CompiledSchema, NodeChange, Message } from "./schema-defs";
+import { inflateRaw } from "pako";
+
+test("this just formats the schema", () => {
+  const prettySchema = prettyPrintSchema(schema);
+  writeFileSync(__dirname + "/figma-pretty.kiwi", prettySchema);
+});
+
+function parseFile(data: Uint8Array): Message {
+  const parsed = FigmaArchiveParser.parseArchive(data);
+  const [schemaFile, dataFile, previewFile] = parsed.files;
+  const fileSchema = decodeBinarySchema(inflateRaw(schemaFile));
+  const parser = new FigDataParser(inflateRaw(dataFile), fileSchema);
+  return parser.parseMessage();
+}
 
 test("able to parse figma kiwi", () => {
   const data = readFileSync(__dirname + "/data/blue-circle.fig");
   const parsed = FigmaArchiveParser.parseArchive(data);
-  const figData = parsed.files[1];
-  console.log("Decompress");
-  const figDataDec = inflateRaw(figData);
+  const [schemaFile, dataFile, previewFile] = parsed.files;
+  const figDataDec = inflateRaw(dataFile);
   expect(figDataDec.length).toBeGreaterThan(100);
-  console.log(
-    `Decompressed ${figData.length} bytes to ${figDataDec.length} bytes`
-  );
-  console.log(figDataDec.buffer);
   writeFileSync(__dirname + "/data/blue-circle.fig-inflated", figDataDec);
-  const parser = new FigDataParser(figDataDec.buffer);
-  const decoded = parser.parseAll();
-  // expect(decoded).not.toBeNull();
+  const fileSchema = decodeBinarySchema(inflateRaw(schemaFile));
+  expect(fileSchema).toHaveProperty("definitions");
+  const parser = new FigDataParser(figDataDec, fileSchema);
+  const decoded = parser.parseMessage();
+  expect(decoded).not.toBeNull();
 });
 
-const tryAllDecoders = (data: ArrayBuffer): any => {};
+test("compare red and blue", () => {
+  const blue = parseFile(readFileSync(__dirname + "/data/blue-circle.fig"));
+  const red = parseFile(readFileSync(__dirname + "/data/red-circle.fig"));
+  expect(blue).toMatchSnapshot();
+});
 
-export interface NodeChange {
-  guid: { sessionID: number; localID: number };
-}
-interface CompiledSchema {
-  encodeNodeChange(message: NodeChange): Uint8Array;
-  decodeNodeChange(buffer: Uint8Array): NodeChange;
-}
-
-test("able to enc dec basic message", () => {
+test("able to enc dec a known message", () => {
   const cs = compileSchema(schema) as CompiledSchema;
   const message: NodeChange = { guid: { sessionID: 123, localID: 321 } };
   const data = cs.encodeNodeChange(message);
@@ -61,10 +68,11 @@ test("it's compressed binary kiwi format in the metadata", () => {
   // console.log(tsdef);
 });
 
-test.skip("able to dec real websocket message", () => {
+test("able to decode a real websocket message", () => {
   const cs = compileSchema(schema) as CompiledSchema;
   const dataCompressed = readFileSync(__dirname + "/data/set-black.bin");
   const data = inflateRaw(dataCompressed);
-  const decoded = cs.decodeNodeChange(new Uint8Array(data));
+  const decoded = cs.decodeMessage(data);
   expect(decoded).not.toBeNull();
+  expect(decoded).toMatchSnapshot();
 });

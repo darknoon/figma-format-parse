@@ -1,0 +1,27 @@
+{
+  "type": "NODE_CHANGES",
+  "sessionID": 9,
+  "ackID": 265,
+  "nodeChanges": [
+    {
+      "guid": {
+        "sessionID": 9,
+        "localID": 5
+      },
+      "fillPaints": [
+        {
+          "type": "SOLID",
+          "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0,
+            "a": 1
+          },
+          "opacity": 1,
+          "visible": true,
+          "blendMode": "NORMAL"
+        }
+      ]
+    }
+  ]
+}

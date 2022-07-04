@@ -1,16 +1,21 @@
-import { compileSchema } from "kiwi-schema";
-import schema from "./schema";
-
-type Decoder = (d: ArrayBuffer) => any;
+import { compileSchema, Schema } from "kiwi-schema";
+import { Message, Schema as CompiledSchema } from "./schema-defs";
 
 export default class FigDataParser {
-  data: DataView;
-  constructor(buffer: ArrayBuffer) {
-    this.data = new DataView(buffer);
+  data: Uint8Array;
+  schema: Schema;
+  constructor(data: Uint8Array, schema: Schema) {
+    this.data = data;
+    this.schema = schema;
+  }
+
+  parseMessage(): Message {
+    const compiled = compileSchema(this.schema) as CompiledSchema;
+    return compiled.decodeMessage(this.data);
   }
 
   parseAll(): Object {
-    const compiled = compileSchema(schema);
+    const compiled = compileSchema(this.schema);
     let decoded: any = null;
     let decodedName: string = "";
     const decoderNames = Object.keys(compiled).filter((d) =>
@@ -18,15 +23,18 @@ export default class FigDataParser {
     );
     for (let name of decoderNames) {
       try {
-        const d: Decoder = compiled[name];
-        // console.log("using decoder " + name);
-        decoded = d(new Uint8Array(this.data.buffer));
+        // Have to call with this syntax so this is bound to compiled :O
+        decoded = compiled[name](this.data);
+        decodedName = name;
+        console.log("decoded as ", decodedName, decoded);
       } catch (err) {
-        console.error(err);
+        // console.error(err);
         // console.warn(name + "failed");
       }
     }
-    console.log("Tried all");
+    if (decoded === null) {
+      console.error("Tried all, couldn't decode");
+    }
     return decoded;
   }
 }
