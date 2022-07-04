@@ -2,6 +2,7 @@
   "dependencies": {
     "@create-figma-plugin/ui": "^2.1.0",
     "@create-figma-plugin/utilities": "^2.1.0",
+    "buffer": "^6.0.3",
     "kiwi-schema": "^0.4.7",
     "pako": "^2.0.4",
     "preact": "^10"

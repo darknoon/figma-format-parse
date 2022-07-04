@@ -1,5 +1,9 @@
 import { compileSchema, Schema } from "kiwi-schema";
-import { Message, Schema as CompiledSchema } from "./schema-defs";
+import {
+  Message,
+  Schema as CompiledSchema,
+  SparseMessage,
+} from "./schema-defs";
 
 export default class FigDataParser {
   data: Uint8Array;
@@ -14,7 +18,13 @@ export default class FigDataParser {
     return compiled.decodeMessage(this.data);
   }
 
-  parseAll(): Object {
+  parseSparseMessage(): SparseMessage {
+    const compiled = compileSchema(this.schema) as CompiledSchema;
+    return compiled.decodeSparseMessage(this.data);
+  }
+
+  /*
+  tryParseAll(): { type: string; result: Object } | null {
     const compiled = compileSchema(this.schema);
     let decoded: any = null;
     let decodedName: string = "";
@@ -23,7 +33,7 @@ export default class FigDataParser {
     );
     for (let name of decoderNames) {
       try {
-        // Have to call with this syntax so this is bound to compiled :O
+        // Have to call with this syntax so `this` is bound to `compiled`
         decoded = compiled[name](this.data);
         decodedName = name;
         console.log("decoded as ", decodedName, decoded);
@@ -33,8 +43,8 @@ export default class FigDataParser {
       }
     }
     if (decoded === null) {
-      console.error("Tried all, couldn't decode");
+      return null;
     }
-    return decoded;
-  }
+    return { type: decodedName, result: decoded };
+  }*/
 }

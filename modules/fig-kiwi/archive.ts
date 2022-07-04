@@ -30,7 +30,8 @@ export default class FigmaArchiveParser {
   readHeader(): Header {
     const preludeExpected = "fig-kiwi";
     const preludeData = this.read(preludeExpected.length);
-    const prelude = String.fromCharCode(...preludeData);
+    // @ts-ignore todo: either downlevel-iteration or a type mismatch here
+    const prelude = String.fromCharCode.apply(String, preludeData);
     if (prelude != preludeExpected) {
       throw new Error(`Unexpected prelude: "${prelude}"`);
     }

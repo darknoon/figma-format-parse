@@ -11,9 +11,9 @@ import schema from "./schema";
 import { Schema as CompiledSchema, NodeChange, Message } from "./schema-defs";
 import { inflateRaw } from "pako";
 
-test("this just formats the schema", () => {
+test.skip("this just formats the schema", () => {
   const prettySchema = prettyPrintSchema(schema);
-  writeFileSync(__dirname + "/figma-pretty.kiwi", prettySchema);
+  writeFileSync(__dirname + "/figma.kiwi", prettySchema);
 });
 
 function parseFile(data: Uint8Array): Message {
@@ -55,6 +55,7 @@ test("able to enc dec a known message", () => {
 test("it's compressed binary kiwi format in the metadata", () => {
   const meta = readFileSync(__dirname + "/data/red-circle.fig-meta");
   const schemaBin = inflateRaw(meta);
+  writeFileSync(__dirname + "/data/red-circle.bkiwi", schemaBin);
   const figMetaSchema = decodeBinarySchema(schemaBin);
   writeFileSync(
     __dirname + "/data/red-circle.kiwi",
