@@ -16,12 +16,13 @@ export interface ParsedFigmaHTML {
   figma: Uint8Array;
 }
 
-// TODO: don't require Buffer for this
 function base64_decode_string(s: string): string {
+  // TODO: don't require Buffer for this
   return Buffer.from(s, "base64").toString();
 }
 
 function base64_decode_data(s: string): Uint8Array {
+  // TODO: don't require Buffer for this
   return Buffer.from(s, "base64");
 }
 

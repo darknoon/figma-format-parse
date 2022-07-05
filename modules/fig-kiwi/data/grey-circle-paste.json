@@ -1,0 +1,173 @@
+{
+    "type": "NODE_CHANGES",
+    "sessionID": 0,
+    "ackID": 0,
+    "pasteID": 1180497570,
+    "pasteFileKey": "vDQhnT3wvDCl0P7UjANY7L",
+    "pasteIsPartiallyOutsideEnclosingFrame": false,
+    "pastePageId": {
+        "sessionID": 0,
+        "localID": 1
+    },
+    "isCut": false,
+    "pasteEditorType": "DESIGN",
+    "nodeChanges": [
+        {
+            "guid": {
+                "sessionID": 0,
+                "localID": 0
+            },
+            "phase": "CREATED",
+            "type": "DOCUMENT",
+            "name": "Document",
+            "visible": true,
+            "opacity": 1,
+            "blendMode": "PASS_THROUGH",
+            "mask": false,
+            "maskIsOutline": false
+        },
+        {
+            "guid": {
+                "sessionID": 0,
+                "localID": 1
+            },
+            "phase": "CREATED",
+            "parentIndex": {
+                "guid": {
+                    "sessionID": 0,
+                    "localID": 0
+                },
+                "position": "!"
+            },
+            "type": "CANVAS",
+            "name": "Page 1",
+            "visible": true,
+            "opacity": 1,
+            "blendMode": "PASS_THROUGH",
+            "transform": {
+                "m00": 1,
+                "m01": 0,
+                "m02": 0,
+                "m10": 0,
+                "m11": 1,
+                "m12": 0
+            },
+            "backgroundEnabled": true,
+            "mask": false,
+            "maskIsOutline": false,
+            "backgroundOpacity": 1,
+            "backgroundColor": {
+                "r": 0.11764705926179886,
+                "g": 0.11764705926179886,
+                "b": 0.11764705926179886,
+                "a": 1
+            },
+            "exportBackgroundDisabled": false
+        },
+        {
+            "guid": {
+                "sessionID": 13,
+                "localID": 2
+            },
+            "phase": "CREATED",
+            "parentIndex": {
+                "guid": {
+                    "sessionID": 0,
+                    "localID": 1
+                },
+                "position": "!"
+            },
+            "type": "ELLIPSE",
+            "name": "Ellipse 1",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "PASS_THROUGH",
+            "size": {
+                "x": 310,
+                "y": 310
+            },
+            "transform": {
+                "m00": 1,
+                "m01": 0,
+                "m02": 584,
+                "m10": 0,
+                "m11": 1,
+                "m12": 543
+            },
+            "dashPattern": [],
+            "mask": false,
+            "maskIsOutline": false,
+            "cornerRadius": 0,
+            "miterLimit": 4,
+            "strokeWeight": 1,
+            "horizontalConstraint": "MIN",
+            "strokeAlign": "INSIDE",
+            "strokeCap": "NONE",
+            "strokeJoin": "MITER",
+            "verticalConstraint": "MIN",
+            "fillPaints": [
+                {
+                    "type": "SOLID",
+                    "color": {
+                        "r": 0.8509804010391235,
+                        "g": 0.8509804010391235,
+                        "b": 0.8509804010391235,
+                        "a": 1
+                    },
+                    "opacity": 1,
+                    "visible": true,
+                    "blendMode": "NORMAL"
+                }
+            ],
+            "strokePaints": [],
+            "handleMirroring": "NONE",
+            "proportionsConstrained": true,
+            "cornerSmoothing": 0,
+            "arcData": {
+                "startingAngle": 0,
+                "endingAngle": 6.2831854820251465,
+                "innerRadius": 0
+            }
+        },
+        {
+            "guid": {
+                "sessionID": 20000013,
+                "localID": 2
+            },
+            "phase": "CREATED",
+            "parentIndex": {
+                "guid": {
+                    "sessionID": 0,
+                    "localID": 0
+                },
+                "position": "\""
+            },
+            "type": "CANVAS",
+            "name": "Internal Only Canvas",
+            "visible": false,
+            "opacity": 1,
+            "blendMode": "PASS_THROUGH",
+            "transform": {
+                "m00": 1,
+                "m01": 0,
+                "m02": 0,
+                "m10": 0,
+                "m11": 1,
+                "m12": 0
+            },
+            "backgroundEnabled": true,
+            "mask": false,
+            "maskIsOutline": false,
+            "backgroundOpacity": 1,
+            "backgroundColor": {
+                "r": 0.11764705926179886,
+                "g": 0.11764705926179886,
+                "b": 0.11764705926179886,
+                "a": 1
+            },
+            "exportBackgroundDisabled": false,
+            "internalOnly": true
+        }
+    ]
+}

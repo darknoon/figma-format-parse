@@ -1,5 +1,8 @@
 export type Header = { prelude: string; version: number };
 
+const FIG_KIWI_PRELUDE = "fig-kiwi";
+const FIG_KIWI_VERSION = 15;
+
 export default class FigmaArchiveParser {
   buffer: Uint8Array;
   data: DataView;
@@ -28,11 +31,10 @@ export default class FigmaArchiveParser {
   }
 
   readHeader(): Header {
-    const preludeExpected = "fig-kiwi";
-    const preludeData = this.read(preludeExpected.length);
+    const preludeData = this.read(FIG_KIWI_PRELUDE.length);
     // @ts-ignore todo: either downlevel-iteration or a type mismatch here
     const prelude = String.fromCharCode.apply(String, preludeData);
-    if (prelude != preludeExpected) {
+    if (prelude != FIG_KIWI_PRELUDE) {
       throw new Error(`Unexpected prelude: "${prelude}"`);
     }
     const version = this.readUint32();
@@ -59,5 +61,42 @@ export default class FigmaArchiveParser {
   } {
     const parser = new FigmaArchiveParser(data);
     return parser.readAll();
+  }
+}
+
+export class FigmaArchiveWriter {
+  public header: Header;
+  public files: Uint8Array[] = [];
+
+  constructor() {
+    this.header = { prelude: FIG_KIWI_PRELUDE, version: FIG_KIWI_VERSION };
+  }
+
+  /** 
+   Add pre-compressed chunk to archive
+  */
+
+  write(): Uint8Array {
+    // First find the total size, allocate a large enough buffer
+    const headerSize = FIG_KIWI_PRELUDE.length + 4;
+    const totalSize = this.files.reduce(
+      (sz, f) => sz + 4 + f.byteLength,
+      headerSize
+    );
+    const buffer = new Uint8Array(totalSize);
+    const view = new DataView(buffer.buffer);
+    const enc = new TextEncoder();
+    // Write
+    let offset = 0;
+    offset = enc.encodeInto(FIG_KIWI_PRELUDE, buffer).written!;
+    view.setUint32(offset, this.header.version, true);
+    offset += 4;
+    for (let file of this.files) {
+      view.setUint32(offset, file.byteLength, true);
+      offset += 4;
+      buffer.set(file, offset);
+      offset += file.byteLength;
+    }
+    return buffer;
   }
 }
