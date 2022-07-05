@@ -46,3 +46,18 @@ export function parseHTMLString(html: string): ParsedFigmaHTML {
     figma: base64_decode_data(figB64),
   };
 }
+
+export function composeHTMLString(data: ParsedFigmaHTML): string {
+  const strValue = "";
+  // TODO: I think I need to EncodeURIComponent here?
+  const metaStr = Buffer.from(JSON.stringify(data.meta)).toString("base64");
+  const figStr = Buffer.from(data.figma).toString("base64");
+
+  return `<meta charset="utf-8" /><meta charset="utf-8" /><span
+  data-metadata="<!--(figmeta)${metaStr}(/figmeta)-->"
+></span
+><span
+  data-buffer="<!--(figma)${figStr}(/figma)-->"
+></span
+><span style="white-space: pre-wrap">${strValue}</span>`;
+}

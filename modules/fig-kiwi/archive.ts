@@ -13,14 +13,14 @@ export default class FigmaArchiveParser {
     this.data = new DataView(buffer.buffer);
   }
 
-  readUint32(): number {
+  private readUint32(): number {
     // All little endian
     const n = this.data.getUint32(this.offset, true);
     this.offset += 4;
     return n;
   }
 
-  read(bytes: number): Uint8Array {
+  private read(bytes: number): Uint8Array {
     if (this.offset + bytes <= this.buffer.length) {
       const d = this.buffer.slice(this.offset, this.offset + bytes);
       this.offset += bytes;
@@ -30,7 +30,7 @@ export default class FigmaArchiveParser {
     }
   }
 
-  readHeader(): Header {
+  private readHeader(): Header {
     const preludeData = this.read(FIG_KIWI_PRELUDE.length);
     // @ts-ignore todo: either downlevel-iteration or a type mismatch here
     const prelude = String.fromCharCode.apply(String, preludeData);
@@ -41,11 +41,11 @@ export default class FigmaArchiveParser {
     return { prelude, version };
   }
 
-  readData(size: number): Uint8Array {
+  private readData(size: number): Uint8Array {
     return this.read(size);
   }
 
-  readAll(): { header: Header; files: Uint8Array[] } {
+  private readAll(): { header: Header; files: Uint8Array[] } {
     const header = this.readHeader();
     const files: Uint8Array[] = [];
     while (this.offset + 4 < this.buffer.length) {
@@ -55,6 +55,7 @@ export default class FigmaArchiveParser {
     }
     return { header, files };
   }
+
   static parseArchive(data: Uint8Array): {
     header: Header;
     files: Uint8Array[];

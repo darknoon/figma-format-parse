@@ -96,8 +96,7 @@ test("able to write dummy files to a fig-kiwi archive", () => {
   const archive = encoder.write();
 
   // Now decode and verify
-  const dec = new FigmaArchiveParser(archive);
-  const { header, files } = dec.readAll();
+  const { header, files } = FigmaArchiveParser.parseArchive(archive);
   expect(files).toEqual(expectedFiles);
   expect(header).toEqual(encoder.header);
 });
