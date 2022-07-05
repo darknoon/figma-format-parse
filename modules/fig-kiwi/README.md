@@ -1,10 +1,16 @@
 ## fig-kiwi parser
 
-This module parses the figma file format
+This module parses the figma file format:
 
 - HTML file from pasteboard with (figma) (/figma) comments
 - Data in .fig archives (starts with fig-kiwi)
 - Includes typescript definitions derived from the [kiwi schema](https://github.com/evanw/kiwi) included with pasteboard and file data
+
+Not included:
+
+- Parsing Blob data in the returned Message (ie for vector networks etc)
+
+Your use of this library is your responsibility, there is no warranty or support of any kind.
 
 ## Usage
 

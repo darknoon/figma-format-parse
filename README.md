@@ -1,11 +1,5 @@
 # Format Parse
 
-Format is actually called "kiwi"!
-duh…
-https://github.com/evanw/kiwi/blob/master/rust/src/lib.rs#L103
-
-_https://github.com/mildsunrise/protobuf-inspector_
-
 ## Development guide
 
 _This plugin is built with [Create Figma Plugin](https://yuanqing.github.io/create-figma-plugin/)._
