@@ -1,5 +1,4 @@
 import FigmaArchiveParser, { FigmaArchiveWriter } from "./archive";
-import FigDataParser from "./figdata";
 import { readFileSync, writeFileSync } from "fs";
 import {
   compileSchema,
@@ -16,20 +15,12 @@ import {
   SparseMessage,
 } from "./schema-defs";
 import { deflateRaw, inflateRaw } from "pako";
-import { h } from "preact";
+import { readFigFile } from "./index";
 
 test.skip("this just formats the schema", () => {
   const prettySchema = prettyPrintSchema(schema);
   writeFileSync(__dirname + "/figma.kiwi", prettySchema);
 });
-
-function parseFile(data: Uint8Array): Message {
-  const parsed = FigmaArchiveParser.parseArchive(data);
-  const [schemaFile, dataFile, previewFile] = parsed.files;
-  const fileSchema = decodeBinarySchema(inflateRaw(schemaFile));
-  const parser = new FigDataParser(inflateRaw(dataFile), fileSchema);
-  return parser.parseMessage();
-}
 
 test("able to parse figma kiwi", () => {
   const data = readFileSync(__dirname + "/data/blue-circle.fig");
@@ -41,14 +32,18 @@ test("able to parse figma kiwi", () => {
   writeFileSync(__dirname + "/data/blue-circle.fig-inflated", figDataDec);
   const fileSchema = decodeBinarySchema(inflateRaw(schemaFile));
   expect(fileSchema).toHaveProperty("definitions");
-  const parser = new FigDataParser(figDataDec, fileSchema);
-  const decoded = parser.parseMessage();
+  const compiledSchema = compileSchema(fileSchema) as CompiledSchema;
+  const decoded = compiledSchema.decodeMessage(figDataDec);
   expect(decoded).not.toBeNull();
 });
 
 test("compare red and blue", () => {
-  const blue = parseFile(readFileSync(__dirname + "/data/blue-circle.fig"));
-  const red = parseFile(readFileSync(__dirname + "/data/red-circle.fig"));
+  const blue = readFigFile(
+    readFileSync(__dirname + "/data/blue-circle.fig")
+  ).message;
+  const red = readFigFile(
+    readFileSync(__dirname + "/data/red-circle.fig")
+  ).message;
   expect(blue).toMatchSnapshot();
 });
 

@@ -9,7 +9,7 @@ import {
   NodeChange,
 } from "./fig-kiwi";
 import { inflateRaw } from "pako";
-import { writeHTMLMessage } from ".";
+import { writeHTMLMessage } from "./index";
 import schema from "./schema";
 
 test("parses components from html string", () => {
