@@ -4,7 +4,7 @@
     "description": "Reads/writes the figma file format for .fig files or text/html pasteboard data.",
     "dependencies": {
         "buffer": "^6.0.3",
-        "kiwi-schema": "^0.4.7",
+        "kiwi-schema": "^0.5.0",
         "pako": "^2.0.4"
     },
     "devDependencies": {

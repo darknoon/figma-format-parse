@@ -9,7 +9,7 @@ import {
   NodeChange,
 } from "./fig-kiwi";
 import { inflateRaw } from "pako";
-import { writeHTMLMessage } from "./index";
+import { writeHTMLMessage, readHTMLMessage } from "./index";
 import schema from "./schema";
 
 test("parses components from html string", () => {
@@ -44,6 +44,40 @@ test("parses components from html string", () => {
   const message: SparseMessage = cs.decodeSparseMessage(inflateRaw(dataFile));
   expect(message).toMatchSnapshot();
 });
+
+test("parses newer format", () => {
+  const str = readFileSync(__dirname + "/data/newer-paste.html", {
+    encoding: "utf-8",
+  });
+
+  const { figma, meta } = parseHTMLString(str);
+
+  expect(meta).toEqual({
+    fileKey: "whhd71XEXzYNauiHCeztfu",
+    pasteID: 2130739331,
+    dataType: "scene",
+  });
+
+  expect(figma.byteLength).toBeGreaterThan(1000);
+
+  // Just to make debugging easier, extract the file
+  writeFileSync(
+    __dirname + "/data/newer-paste.fig",
+    new Uint8Array(figma)
+  );
+
+  const parsed = FigmaArchiveParser.parseArchive(figma);
+  expect(parsed.files.length).toBe(2);
+
+  const [schemaFile, dataFile] = parsed.files;
+  const fileSchema = decodeBinarySchema(inflateRaw(schemaFile));
+
+  const cs = compileSchema(fileSchema) as CompiledSchema;
+
+  const message: SparseMessage = cs.decodeSparseMessage(inflateRaw(dataFile));
+  expect(message).toMatchSnapshot();
+});
+
 
 test("write canned message to html", () => {
   const message: Message = JSON.parse(
@@ -251,5 +285,20 @@ test("write html string", () => {
 
   expect(html).not.toBeNull();
   writeFileSync(__dirname + "/gen/just-ellipse.html", html);
+
+  const rt = readHTMLMessage(html);
+  // Numbers don't exactly equal :(
+  // expect({ meta: rt.meta, message: rt.message }).toEqual({
+  //   meta: { fileKey: "abcd", pasteID: 1234, dataType: "scene" },
+  //   message,
+  // });
   // expect(html).toMatchSnapshot();
+});
+
+test("failing test case", () => {
+  const html = readFileSync(__dirname + "/data/widget-paste.html", {
+    encoding: "utf8",
+  });
+  const { message } = readHTMLMessage(html);
+  expect(message).toBeDefined();
 });

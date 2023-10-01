@@ -20,7 +20,7 @@ interface ParsedFigma {
   message: Message;
 }
 
-export function readHTMLMessage(html: string): ParsedFigma {
+export function readHTMLMessage(html: string): ParsedFigma {  
   const { figma, meta } = parseHTMLString(html);
   const { header, files } = FigmaArchiveParser.parseArchive(figma);
   const [schemaCompressed, dataCompressed] = files;
@@ -33,18 +33,14 @@ export function readHTMLMessage(html: string): ParsedFigma {
 export function writeHTMLMessage(m: {
   meta: FigmaMeta;
   schema: Schema;
+  header?: Header;
   message: Message;
 }): string {
-  const { meta, schema, message } = m;
-  const encoder = new FigmaArchiveWriter();
-  const binSchema = encodeBinarySchema(schema);
-  const compiledSchema = compileSchema(schema) as CompiledSchema;
-  encoder.files = [
-    deflateRaw(binSchema),
-    deflateRaw(compiledSchema.encodeMessage(m.message)),
-  ];
-  const data = encoder.write();
-  return composeHTMLString({ meta, figma: data });
+  const { meta, schema, header, message } = m;
+  return composeHTMLString({
+    meta,
+    figma: writeFigFile({ schema, header, message }),
+  });
 }
 
 export function readFigFile(data: Uint8Array): {

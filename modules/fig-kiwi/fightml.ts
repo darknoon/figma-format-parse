@@ -33,8 +33,11 @@ export function parseHTMLString(html: string): ParsedFigmaHTML {
   const fsi = html.indexOf(figmaStart);
   const fei = html.indexOf(figmaEnd);
 
-  if (msi == -1) {
-    throw new Error("Couldn't find start of figmeta");
+  if (msi == -1 || msi > mei || mei == -1) {
+    throw new Error("Couldn't find figmeta");
+  }
+  if (fsi == -1 || fsi > fei || fei == -1) {
+    throw new Error("Couldn't find figma");
   }
 
   const metaB64 = html.substring(msi + metaStart.length, mei);
@@ -50,10 +53,11 @@ export function parseHTMLString(html: string): ParsedFigmaHTML {
 export function composeHTMLString(data: ParsedFigmaHTML): string {
   const strValue = "";
   // TODO: I think I need to EncodeURIComponent here?
-  const metaStr = Buffer.from(JSON.stringify(data.meta)).toString("base64");
+  const metaJ = JSON.stringify(data.meta) + "\n";
+  const metaStr = Buffer.from(metaJ).toString("base64");
   const figStr = Buffer.from(data.figma).toString("base64");
 
-  return `<meta charset="utf-8" /><meta charset="utf-8" /><span
+  return `<meta charset="utf-8" /><span
   data-metadata="<!--(figmeta)${metaStr}(/figmeta)-->"
 ></span
 ><span

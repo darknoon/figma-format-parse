@@ -1,0 +1,432 @@
+--- A/figmav20.kiwi
++++ B/figmav3333.kiwi
+@@ -14,6 +14,7 @@
+   SCENE_GRAPH_REPLY = 12;
+   DIFF = 13;
+   CLIENT_BROADCAST = 14;
++  JOIN_START_JOURNALED = 15;
+ }
+ 
+ enum Axis {
+@@ -148,6 +149,11 @@
+   STRIKETHROUGH = 2;
+ }
+ 
++enum LeadingTrim {
++  NONE = 0;
++  CAP_HEIGHT = 1;
++}
++
+ enum NumberUnits {
+   RAW = 0;
+   PIXELS = 1;
+@@ -328,6 +334,11 @@
+   ABSOLUTE = 1;
+ }
+ 
++enum StackWrap {
++  NO_WRAP = 0;
++  WRAP = 1;
++}
++
+ enum ConnectionType {
+   NONE = 0;
+   INTERNAL_NODE = 1;
+@@ -336,6 +347,7 @@
+   CLOSE = 4;
+   SET_VARIABLE = 5;
+   UPDATE_MEDIA_RUNTIME = 6;
++  CONDITIONAL = 7;
+ }
+ 
+ enum InteractionType {
+@@ -351,6 +363,8 @@
+   DRAG = 9;
+   ON_KEY_DOWN = 10;
+   ON_VOICE = 11;
++  ON_MEDIA_HIT = 12;
++  ON_MEDIA_END = 13;
+ }
+ 
+ enum TransitionType {
+@@ -903,6 +917,7 @@
+ message NodeGenerationData {
+   NodeChange[] overrides = 1;
+   bool useFineGrainedSyncing = 2;
++  NodeChange[] diffOnlyRemovals = 3;
+ }
+ 
+ message DerivedImmutableFrameData {
+@@ -1104,6 +1119,7 @@
+ enum ScrollBehavior {
+   SCROLLS = 0;
+   FIXED_WHEN_CHILD_OF_SCROLLING_FRAME = 1;
++  STICKY_SCROLLS = 2;
+ }
+ 
+ message ArcData {
+@@ -1131,6 +1147,11 @@
+   bool isDeleted = 4;
+ }
+ 
++message MultiplayerFieldVersion {
++  uint counter = 1;
++  uint sessionID = 2;
++}
++
+ enum ConnectorMagnet {
+   NONE = 0;
+   AUTO = 1;
+@@ -1180,6 +1201,10 @@
+   GUID nodeId = 1;
+ }
+ 
++message EditInfo {
++  string timestampIso8601 = 1;
++}
++
+ enum EditorType {
+   DESIGN = 0;
+   WHITEBOARD = 1;
+@@ -1226,6 +1251,11 @@
+   GUID inheritEffectStyleID = 169;
+   GUID inheritGridStyleID = 170;
+   GUID inheritFillStyleIDForStroke = 185;
++  StyleId styleIdForFill = 332;
++  StyleId styleIdForStrokeFill = 333;
++  StyleId styleIdForText = 334;
++  StyleId styleIdForEffect = 335;
++  StyleId styleIdForGrid = 336;
+   Paint[] backgroundPaints = 193;
+   GUID inheritFillStyleIDForBackground = 194;
+   bool isStateGroup = 225;
+@@ -1290,6 +1320,9 @@
+   FontVariantPosition fontVariantPosition = 137;
+   Number letterSpacing = 165;
+   string fontVersion = 202;
++  LeadingTrim leadingTrim = 322;
++  bool hangingQuote = 337;
++  bool hangingList = 339;
+   uint textUserLayoutVersion = 203;
+   OpenTypeFeature[] toggledOnOTFeatures = 205;
+   OpenTypeFeature[] toggledOffOTFeatures = 206;
+@@ -1383,6 +1416,10 @@
+   StackCounterAlign stackChildAlignSelf = 236;
+   StackPositioning stackPositioning = 269;
+   bool stackReverseZIndex = 271;
++  StackWrap stackWrap = 323;
++  float stackCounterSpacing = 324;
++  OptionalVector minSize = 325;
++  OptionalVector maxSize = 326;
+   GUID transitionNodeID = 139;
+   GUID prototypeStartNodeID = 140;
+   Color prototypeBackgroundColor = 141;
+@@ -1414,6 +1451,7 @@
+   ShapeWithTextType shapeWithTextType = 241;
+   float shapeUserHeight = 247;
+   DerivedImmutableFrameData derivedImmutableFrameData = 254;
++  MultiplayerFieldVersion derivedImmutableFrameDataVersion = 338;
+   NodeGenerationData nodeGenerationData = 240;
+   CodeBlockLanguage codeBlockLanguage = 259;
+   LinkPreviewData linkPreviewData = 278;
+@@ -1513,6 +1551,11 @@
+   VariableSetID variableSetID = 313;
+   VariableResolvedDataType variableResolvedType = 314;
+   VariableDataValues variableDataValues = 315;
++  AgendaPositionMap agendaPositionMap = 327;
++  AgendaMetadataMap agendaMetadataMap = 328;
++  MigrationStatus migrationStatus = 329;
++  bool isSoftDeleted = 330;
++  EditInfo editInfo = 331;
+ }
+ 
+ message VideoPlayback {
+@@ -1525,6 +1568,12 @@
+   PLAY = 0;
+   PAUSE = 1;
+   TOGGLE_PLAY_PAUSE = 2;
++  MUTE = 3;
++  UNMUTE = 4;
++  TOGGLE_MUTE_UNMUTE = 5;
++  SKIP_FORWARD = 6;
++  SKIP_BACKWARD = 7;
++  SKIP_TO = 8;
+ }
+ 
+ message WidgetHoverStyle {
+@@ -1583,6 +1632,8 @@
+   BORDER_BOTTOM_WEIGHT = 19;
+   BORDER_LEFT_WEIGHT = 20;
+   BORDER_RIGHT_WEIGHT = 21;
++  VARIANT_PROPERTIES = 22;
++  STACK_COUNTER_SPACING = 23;
+ }
+ 
+ message VariableModeBySetMap {
+@@ -1612,6 +1663,51 @@
+   float size = 2;
+ }
+ 
++message AgendaPositionMap {
++  AgendaPositionMapEntry[] entries = 1;
++}
++
++message AgendaPositionMapEntry {
++  GUID id = 1;
++  string position = 2;
++}
++
++enum AgendaItemType {
++  NODE = 0;
++  BLOCK = 1;
++}
++
++message AgendaMetadataMap {
++  AgendaMetadataMapEntry[] entries = 1;
++}
++
++message AgendaMetadataMapEntry {
++  GUID id = 1;
++  AgendaMetadata data = 2;
++}
++
++message AgendaMetadata {
++  string name = 1;
++  AgendaItemType type = 2;
++  GUID targetNodeID = 3;
++  AgendaTimerInfo timerInfo = 4;
++  AgendaVoteInfo voteInfo = 5;
++  AgendaMusicInfo musicInfo = 6;
++}
++
++message AgendaTimerInfo {
++  uint timerLength = 1;
++}
++
++message AgendaVoteInfo {
++  uint voteCount = 1;
++}
++
++message AgendaMusicInfo {
++  string songID = 1;
++  uint startTimeMs = 2;
++}
++
+ message ComponentPropRef {
+   uint nodeField = 1;
+   GUID defID = 2;
+@@ -1733,6 +1829,7 @@
+   KOTLIN = 12;
+   RUST = 13;
+   BASH = 14;
++  PLAINTEXT = 15;
+ }
+ 
+ enum InternalEnumForTest {
+@@ -1761,6 +1858,9 @@
+   Directionality directionality = 3;
+   DirectionalityIntent directionalityIntent = 4;
+   int downgradeStyleId = 5;
++  int consistencyStyleId = 6;
++  int listStartOffset = 7;
++  bool isFirstLineOfList = 8;
+ }
+ 
+ enum BulletType {
+@@ -1802,6 +1902,15 @@
+   KeyTrigger keyTrigger = 4;
+   string voiceEventPhrase = 5;
+   float transitionTimeout = 6;
++  float mediaHitTime = 7;
++}
++
++message PrototypeVariableTarget {
++  VariableID id = 1;
++}
++
++message ConditionalActions {
++  PrototypeAction[] actions = 1;
+ }
+ 
+ message PrototypeAction {
+@@ -1822,6 +1931,15 @@
+   VariableAnyValue targetVariableValue = 15;
+   MediaAction mediaAction = 16;
+   bool transitionResetVideoPosition = 17;
++  bool openUrlInNewTab = 18;
++  PrototypeVariableTarget targetVariable = 19;
++  VariableData targetVariableData = 20;
++  float mediaSkipToTime = 21;
++  float mediaSkipByAmount = 22;
++  VariableData[] conditions = 23;
++  ConditionalActions[] conditionalActions = 24;
++  bool transitionResetScrollPosition = 25;
++  bool transitionResetInteractiveComponents = 26;
+ }
+ 
+ message PrototypeStartingPoint {
+@@ -1866,6 +1984,7 @@
+ message StampData {
+   string userId = 1;
+   string votingSessionId = 2;
++  string stampedByUserId = 3;
+ }
+ 
+ message LinkPreviewData {
+@@ -1945,6 +2064,18 @@
+   PlaybackChangePhase phase = 5;
+ }
+ 
++message TextCursor {
++  Rect selectionBox = 1;
++  GUID canvasGuid = 2;
++  GUID textNodeGuid = 3;
++}
++
++message TextSelection {
++  Rect[] selectionBoxes = 1;
++  GUID canvasGuid = 2;
++  GUID textNodeGuid = 3;
++}
++
+ enum PlaybackChangePhase {
+   INITIATED = 0;
+   ABORTED = 1;
+@@ -1989,6 +2120,11 @@
+   string connectedCallId = 1;
+ }
+ 
++enum Heartbeat {
++  FOREGROUND = 0;
++  BACKGROUND = 1;
++}
++
+ message UserChange {
+   uint sessionID = 1;
+   bool connected = 2;
+@@ -2013,6 +2149,11 @@
+   bool canWrite = 21;
+   bool highFiveStatus = 22;
+   InstanceStateChange[] instanceStateChanges = 23;
++  TextCursor textCursor = 24;
++  TextSelection textSelection = 25;
++  uint connectedAtTimeS = 26;
++  bool focusOnTextCursor = 27;
++  Heartbeat heartbeat = 28;
+ }
+ 
+ message SceneGraphQuery {
+@@ -2039,6 +2180,14 @@
+   string songUUID = 8;
+ }
+ 
++message MusicInfo {
++  bool isPaused = 1;
++  uint messageID = 2;
++  string songID = 3;
++  uint lastReceivedSongTimestampMs = 4;
++  bool isStopped = 5;
++}
++
+ message PresenterInfo {
+   uint sessionID = 1;
+ }
+@@ -2049,6 +2198,7 @@
+   TimerInfo timer = 3;
+   PresenterInfo presenter = 4;
+   PresenterInfo prototypePresenter = 5;
++  MusicInfo music = 6;
+ }
+ 
+ message Message {
+@@ -2058,6 +2208,7 @@
+   NodeChange[] nodeChanges = 4;
+   UserChange[] userChanges = 5;
+   Blob[] blobs = 6;
++  uint blobBaseIndex = 30;
+   string signalName = 7;
+   Access access = 8;
+   string styleSetName = 9;
+@@ -2108,6 +2259,7 @@
+ 
+ enum RichMediaType {
+   ANIMATED_IMAGE = 0;
++  VIDEO = 1;
+ }
+ 
+ message RichMediaData {
+@@ -2123,6 +2275,7 @@
+   COLOR = 4;
+   EXPRESSION = 5;
+   MAP = 6;
++  SYMBOL_ID = 7;
+ }
+ 
+ enum VariableResolvedDataType {
+@@ -2131,6 +2284,7 @@
+   STRING = 2;
+   COLOR = 4;
+   MAP = 5;
++  SYMBOL_ID = 6;
+ }
+ 
+ message VariableAnyValue {
+@@ -2141,6 +2295,7 @@
+   Color colorValue = 5;
+   Expression expressionValue = 6;
+   VariableMap mapValue = 7;
++  SymbolId symbolIdValue = 8;
+ }
+ 
+ enum ExpressionFunction {
+@@ -2147,6 +2302,20 @@
+   ADDITION = 0;
+   SUBTRACTION = 1;
+   RESOLVE_VARIANT = 2;
++  MULTIPLY = 3;
++  DIVIDE = 4;
++  EQUALS = 5;
++  NOT_EQUAL = 6;
++  LESS_THAN = 7;
++  LESS_THAN_OR_EQUAL = 8;
++  GREATER_THAN = 9;
++  GREATER_THAN_OR_EQUAL = 10;
++  AND = 11;
++  OR = 12;
++  NOT = 13;
++  STRINGIFY = 14;
++  TERNARY = 15;
++  VAR_MODE_LOOKUP = 16;
+ }
+ 
+ message Expression {
+@@ -2184,6 +2353,10 @@
+   VariableData variableData = 2;
+ }
+ 
++message OptionalVector {
++  Vector value = 1;
++}
++
+ enum HTMLTag {
+   AUTO = 0;
+   ARTICLE = 1;
+@@ -2346,4 +2519,18 @@
+   TIMER = 79;
+   ALERTDIALOG = 80;
+   DIALOG = 81;
++}
++
++message MigrationStatus {
++  bool dsdCleanup = 1;
++}
++
++message NodeFieldMap {
++  NodeFieldMapEntry[] entries = 1;
++}
++
++message NodeFieldMapEntry {
++  GUID guid = 1;
++  uint field = 2;
++  uint lastModifiedSequenceNumber = 3;
+ }

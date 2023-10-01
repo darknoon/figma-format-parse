@@ -10,38 +10,90 @@ import {
 } from "@create-figma-plugin/ui";
 import { emit } from "@create-figma-plugin/utilities";
 import { h } from "preact";
+import { ChangeEvent } from "preact/compat";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
-import { FigmaMeta, readHTMLMessage } from "../modules/fig-kiwi/index";
+import {
+  FigmaMeta,
+  readHTMLMessage,
+  writeHTMLMessage,
+} from "../modules/fig-kiwi/index";
 import { Buffer } from "buffer";
-import FigDataParser from "../modules/fig-kiwi/figdata";
 
-import { CloseHandler, CreateRectanglesHandler } from "./types";
-import { Schema, SparseMessage } from "../modules/fig-kiwi/fig-kiwi";
-import FigmaArchiveParser from "../modules/fig-kiwi/archive";
-import { compileSchema, decodeBinarySchema } from "kiwi-schema";
-import { inflateRaw } from "pako";
+import { CloseHandler } from "./types";
+import { SparseMessage } from "../modules/fig-kiwi/fig-kiwi";
+import { compileSchema, Schema, prettyPrintSchema } from "kiwi-schema";
+import { Message } from "../modules/fig-kiwi/schema-defs";
+import { Header } from "../modules/fig-kiwi/archive";
+
+const bytesReplacer = (key: string, value: any): any => {
+  if (
+    typeof value == "object" &&
+    value instanceof Uint8Array &&
+    key == "bytes"
+  ) {
+    console.log("replace buffer with length", value.byteLength);
+    return Buffer.from(value).toString("base64");
+  }
+  return value;
+};
+
+const bytesReplacerInverse = (key: string, value: any): any => {
+  if (key === "bytes" && typeof value === "string") {
+    return Buffer.from(value, "base64");
+  }
+  return value;
+};
 
 function Plugin() {
-  const [data, setData] = useState<{
-    meta: FigmaMeta;
-    data: SparseMessage;
-  } | null>(null);
+  const [data, setData] = useState<
+    | {
+        meta: FigmaMeta;
+        message: SparseMessage;
+        schema: Schema;
+        header: Header;
+      }
+    | undefined
+  >(undefined);
+
+  const [modifiedText, setModifiedText] = useState<string | null>(null);
+
   const handleCloseButtonClick = useCallback(function () {
     emit<CloseHandler>("CLOSE");
   }, []);
 
   const handlePaste = useCallback(
     (e: ClipboardEvent) => {
-      console.log(e.clipboardData?.types);
+      console.log("types", e.clipboardData?.types);
       const html = e.clipboardData?.getData("text/html");
       if (html) {
-        const { message, meta } = readHTMLMessage(html);
-        console.log("setting data");
-        setData({ meta, data: message });
-        console.log("done setting data");
+        try {
+          const { message, meta, schema, header } = readHTMLMessage(html);
+          console.log("setting data");
+          setData({ meta, message, schema, header });
+          console.log("done setting data");
+         } catch (e) {
+          console.warn(e);
+         }
       }
     },
     [setData]
+  );
+  const [valid, setIsValid] = useState(false);
+
+  const validateMessage = (text: string) => {
+    const message = JSON.parse(text, bytesReplacerInverse);
+    // TODO: run through compiled schema
+    return typeof message === "object";
+  };
+
+  const handleDataChanged = useCallback(
+    (e: ChangeEvent<HTMLTextAreaElement>) => {
+      const text = (e?.target as HTMLTextAreaElement).value;
+      setModifiedText(text);
+      setIsValid(validateMessage(text));
+      // If data is valid
+    },
+    [setData, data, setIsValid]
   );
 
   const textField = useRef<HTMLInputElement>(null);
@@ -69,7 +121,7 @@ function Plugin() {
   const askDoPaste = useCallback(() => {
     try {
       textField.current?.focus();
-      console.log("running command");
+      console.log("execCommand paste");
       // document.execCommand("copy");
       document.execCommand("paste");
     } catch (e) {
@@ -77,6 +129,43 @@ function Plugin() {
     }
   }, [container, textField]);
 
+  const handleCopy = useCallback(
+    (e: ClipboardEvent) => {
+      console.log("In handleCopy");
+      const schema = data?.schema;
+      if (!modifiedText || !validateMessage(modifiedText) || !schema) {
+        return;
+      }
+      const message = JSON.parse(modifiedText, bytesReplacerInverse) as Message;
+      const { pasteFileKey: fileKey = "", pasteID = 0 } = message;
+      const html = writeHTMLMessage({
+        schema,
+        message,
+        meta: { fileKey, pasteID, dataType: "scene" },
+      });
+      console.log("have message. meta", {
+        fileKey,
+        pasteID,
+        dataType: "scene",
+      });
+      console.log(`have html ${html.length} bytes`);
+      e.preventDefault();
+      e.clipboardData?.clearData();
+      e.clipboardData?.setData("text/html", html);
+      console.log(`set html`, html);
+      const roundTrip = readHTMLMessage(html);
+      console.log("rt", roundTrip);
+    },
+    [data, modifiedText]
+  );
+
+  const handleCopyModified = useCallback(() => {
+    console.log("handle copy modified");
+    textField.current?.focus();
+    document.execCommand("copy");
+  }, []);
+
+  // Force paste on show
   useEffect(() => {
     console.log("wating to paste");
     setTimeout(() => {
@@ -89,25 +178,43 @@ function Plugin() {
     console.log("running command");
     // document.execCommand("copy");
   }, [textField.current]);
+
   return (
-    <Container space="medium" onPaste={handlePaste} ref={container}>
+    <Container
+      space="medium"
+      onPaste={handlePaste}
+      onCopy={handleCopy}
+      ref={container}
+    >
       <VerticalSpace space="large" />
-      {
-        // Don't need a user gesture!
-        /* <Button onClick={askDoPaste}>Paste</Button> */
-      }
+      <Button onClick={askDoPaste}>Paste</Button>
       <Text>
-        <pre>{data ? JSON.stringify(data.data, undefined, 2) : "none"}</pre>
+        <pre>{JSON.stringify(data?.header, undefined, 2)}</pre>
       </Text>
+      <TextboxMultiline
+        style={{ height: 300 }}
+        value={
+          modifiedText ??
+          (data ? JSON.stringify(data.message, bytesReplacer, 2) : "none")
+        }
+        onInput={handleDataChanged}
+      />
+      <TextboxMultiline
+        style={{ height: 300 }}
+        value={
+          data && data.schema ? prettyPrintSchema(data.schema) : "no schema"
+        }
+        onInput={handleDataChanged}
+      />
       <VerticalSpace space="small" />
-      {data === null ? (
+      {!data ? (
         <input onPaste={handlePaste} value="paste here" ref={textField} />
       ) : null}
       <VerticalSpace space="extraLarge" />
       <Columns space="extraSmall">
-        {/* <Button fullWidth onClick={handleCreateRectanglesButtonClick}>
-          Create
-        </Button> */}
+        <Button fullWidth onClick={handleCopyModified} disabled={!valid}>
+          Copy Modified
+        </Button>
         <Button fullWidth onClick={handleCloseButtonClick} secondary>
           Close
         </Button>
