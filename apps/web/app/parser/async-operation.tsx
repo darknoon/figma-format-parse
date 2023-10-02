@@ -41,11 +41,19 @@ export default function AsyncOperation<
   children,
 }: AsyncOperationProps<Input, Output, Operation>) {
   const [state, setState] = useState<LoaderState<Output>>({ status: "idle" })
-
+  const [lastInput, setLastInput] = useState<Input | null>(null)
+  const [needsRerun, setNeedsRerun] = useState(false)
   useEffect(() => {
-    if (state.status !== "idle") {
+    if (lastInput === input) {
       return
     }
+    setLastInput(input)
+    if (state.status === "loading") {
+      // TODO: support cancellation? We will return stale data
+      setNeedsRerun(true)
+      return
+    }
+    setNeedsRerun(false)
     const startTime = Date.now()
     const run = async () => {
       if ("loading" in state) {
@@ -84,7 +92,9 @@ export default function AsyncOperation<
         }
       }
     }
-    run()
+    run().then(() => {
+      // Rerun if needed
+    })
     // don't want state in here
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [input, operation, state])
