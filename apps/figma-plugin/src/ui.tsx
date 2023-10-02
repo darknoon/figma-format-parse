@@ -4,7 +4,6 @@ import {
   Container,
   render,
   Text,
-  Textbox,
   TextboxMultiline,
   VerticalSpace,
 } from "@create-figma-plugin/ui";
@@ -16,14 +15,13 @@ import {
   FigmaMeta,
   readHTMLMessage,
   writeHTMLMessage,
-} from "fig-kiwi/index";
+  Message,
+  Header,
+} from "fig-kiwi";
 import { Buffer } from "buffer";
 
 import { CloseHandler } from "./types";
-import { SparseMessage } from "fig-kiwi/fig-kiwi";
-import { compileSchema, Schema, prettyPrintSchema } from "kiwi-schema";
-import { Message } from "fig-kiwi/schema-defs";
-import { Header } from "fig-kiwi/archive";
+import { Schema, prettyPrintSchema } from "kiwi-schema";
 
 const bytesReplacer = (key: string, value: any): any => {
   if (
@@ -48,7 +46,7 @@ function Plugin() {
   const [data, setData] = useState<
     | {
         meta: FigmaMeta;
-        message: SparseMessage;
+        message: Message;
         schema: Schema;
         header: Header;
       }
