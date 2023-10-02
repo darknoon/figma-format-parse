@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils"
 import { TypePill } from "./type-pill"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { CodeView } from "./code-view"
+import { hex, replacerForHex } from "./hex"
 
 type FileContents = ParsedFigmaArchive | ParsedFigmaHTML
 
@@ -79,11 +80,16 @@ export function FigmaFile({ data }: { data: FileContents }) {
             )}
             {navSelection.type === "schema" && <Schema schema={data.schema} />}
             {navSelection.type === "blobs" && blobs && (
-              <ol>
+              <div className="flex flex-col space-y-4">
                 {blobs.map((b, i) => (
-                  <li key={i}>Blob({b.bytes.length} bytes)</li>
+                  <div key={i}>
+                    Blob({b.bytes.length} bytes)
+                    <div className="font-mono font-xs p-4 border border-gray-100 dark:border-gray-800 rounded-lg">
+                      {hex(b.bytes, " ")}
+                    </div>
+                  </div>
                 ))}
-              </ol>
+              </div>
             )}
             {node && <Content node={node} />}
           </div>
@@ -264,5 +270,5 @@ function formatGUID(guid: GUID) {
 }
 
 function Content({ node }: { node: NodeChange }) {
-  return <CodeView>{JSON.stringify(node, null, 2)}</CodeView>
+  return <CodeView>{JSON.stringify(node, replacerForHex, 2)}</CodeView>
 }
