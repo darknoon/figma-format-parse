@@ -24,7 +24,7 @@ export type LoaderState<Output> =
 export type AsyncOperationProps<
   Input,
   Output,
-  Operation extends (input: Input) => AsyncGenerator<ProgressUpdate, Output>,
+  Operation extends (input: Input) => AsyncGenerator<ProgressUpdate, Output>
 > = {
   input: Input
   operation: Operation
@@ -34,7 +34,7 @@ export type AsyncOperationProps<
 export default function AsyncOperation<
   Input,
   Output,
-  Operation extends (input: Input) => AsyncGenerator<ProgressUpdate, Output>,
+  Operation extends (input: Input) => AsyncGenerator<ProgressUpdate, Output>
 >({
   input,
   operation,
@@ -47,24 +47,25 @@ export default function AsyncOperation<
       return
     }
     const startTime = Date.now()
-    setState({
-      status: "loading",
-      startTime,
-      operation: operation(input),
-    })
     const run = async () => {
       if ("loading" in state) {
         return
       }
       let result: Output | undefined
-      const generator = operation(input)
       try {
+        const generator = operation(input)
+        setState({
+          status: "loading",
+          startTime,
+          operation: generator,
+        })
         while (true) {
           const { value, done } = await generator.next(result)
           if (done) {
             setState(() => ({ status: "done", data: value }))
             return
           } else {
+            console.info("progress", value)
             setState(() => ({
               status: "loading",
               startTime,

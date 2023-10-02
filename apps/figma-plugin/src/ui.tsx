@@ -70,7 +70,7 @@ function Plugin() {
           setData({ meta, message, schema, header });
           console.log("done setting data");
          } catch (e) {
-          console.warn(e);
+          console.error("Error parsing clipboard data", e);
          }
       }
     },

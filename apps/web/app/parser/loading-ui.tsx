@@ -10,15 +10,20 @@ export function Loading({
   up: ProgressUpdate
   className?: string
 }) {
-  if (up.progress) {
-    const value = (up.progress.current / up.progress.total) * 100
-    return (
-      <div className={cn("w-full max-w-sm", className)}>
-        {up.message}
-        <Progress value={value} />
+  const percent = up.progress
+    ? (up.progress.current / up.progress.total) * 100
+    : undefined
+  return (
+    <div
+      className={cn(
+        "w-full min-h-screen flex flex-col justify-center items-center",
+        className
+      )}
+    >
+      <div className="min-w-40 flex flex-col space-y-4 justify-center items-center">
+        <p className="w-40 text-center">{up.message}</p>
+        {percent && <Progress value={percent} className="w-40" />}
       </div>
-    )
-  } else {
-    return <div>{up.message}</div>
-  }
+    </div>
+  )
 }

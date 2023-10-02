@@ -2,6 +2,8 @@
 import * as React from "react"
 import { useMemo } from "react"
 
+import { fromByteArray } from "base64-js"
+
 import { Schema, prettyPrintSchema } from "kiwi-schema"
 import {
   CompiledSchema,
@@ -28,6 +30,7 @@ type FileContents = ParsedFigmaArchive | ParsedFigmaHTML
 
 type NavSelection =
   | { type: "layer"; guid: GUID }
+  | { type: "preview" }
   | { type: "meta" }
   | { type: "misc" }
   | { type: "blobs" }
@@ -90,9 +93,34 @@ export function FigmaFile({ data }: { data: FileContents }) {
                 </CardContent>
               </Card>
             )}
-            {navSelection.type === "schema" && (
+            {navSelection.type === "schema" && "header" in data && (
               <Schema schema={data.schema} header={data.header} />
             )}
+            {navSelection.type === "preview" &&
+              "preview" in data &&
+              data.preview && (
+                <Card>
+                  <CardHeader>
+                    <h2 className="text-lg tracking-tight">Preview</h2>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col space-y-4">
+                      <p className="text-xs text-gray-700 dark:text-gray-400">
+                        {data.preview.length} bytes
+                      </p>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        alt=""
+                        src={`data:image/png;base64,${fromByteArray(
+                          data.preview
+                        )}`}
+                        className="w-16"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
             {navSelection.type === "blobs" && blobs && <Blobs blobs={blobs} />}
             {node && (
               <NodeContent
@@ -216,6 +244,14 @@ function Sidebar({
               selected={navSelection.type === "meta"}
             >
               Paste Info
+            </SidebarItem>
+          )}
+          {type === "file" && (
+            <SidebarItem
+              onClick={() => setNavSelection({ type: "preview" })}
+              selected={navSelection.type === "preview"}
+            >
+              Preview
             </SidebarItem>
           )}
           <SidebarItem

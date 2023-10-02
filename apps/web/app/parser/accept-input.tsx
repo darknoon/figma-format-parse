@@ -63,10 +63,11 @@ export default function AcceptInput() {
         <AsyncOperation input={file} operation={parseFile}>
           {(state: LoaderState<ParsedFigmaArchive>) => (
             <>
-              {state.status == "loading" && (
-                <Loading up={state} className="max-w-sm" />
-              )}
+              {state.status == "loading" && <Loading up={state} />}
               {state.status === "done" && <FigmaFile data={state.data} />}
+              {state.status === "error" && (
+                <ErrorRecovery error={state.error} />
+              )}
             </>
           )}
         </AsyncOperation>
@@ -75,10 +76,11 @@ export default function AcceptInput() {
         <AsyncOperation input={pasteContent} operation={parseClipboard}>
           {(state: LoaderState<ParsedFigmaHTML>) => (
             <>
-              {state.status == "loading" && (
-                <Loading up={state} className="max-w-sm" />
-              )}
+              {state.status == "loading" && <Loading up={state} />}
               {state.status === "done" && <FigmaFile data={state.data} />}
+              {state.status === "error" && (
+                <ErrorRecovery error={state.error} />
+              )}
             </>
           )}
         </AsyncOperation>
@@ -88,7 +90,7 @@ export default function AcceptInput() {
           onDrop={onDrop}
           onPaste={onPaste}
           onDragOver={(e) => e.preventDefault()} // Required to make droppable area
-          className="flex min-h-screen flex-col items-center justify-between p-24 w-ful"
+          className="flex min-h-screen flex-col items-center justify-between p-24 w-full"
         >
           <div className="border-2 border-dashed border-gray-400 rounded-xl align-center gap-4 flex flex-col items-center max-w-sm">
             <div className="p-8">
@@ -141,4 +143,14 @@ async function* parseClipboard(
   yield { message: "Done" }
   await smallDelay()
   return result
+}
+
+function ErrorRecovery({ error }: { error: Error }) {
+  return (
+    <div>
+      <p>There was an error parsing your data</p>
+      <p>{typeof error}</p>
+      <p className="text-sm text-muted-foreground">{error.message}</p>
+    </div>
+  )
 }

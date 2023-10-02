@@ -19,6 +19,7 @@
     "lucide-react": "^0.279.0",
     "next": "latest",
     "react": "latest",
+    "base64-js": "*",
     "react-dom": "latest",
     "tailwind-merge": "^1.14.0",
     "tailwindcss-animate": "^1.0.7"
