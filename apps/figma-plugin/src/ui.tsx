@@ -98,26 +98,6 @@ function Plugin() {
 
   const textField = useRef<HTMLInputElement>(null);
   const container = useRef<HTMLDivElement>(null);
-  // const askDoPaste = useCallback(() => {
-  //   // const text = navigator.clipboard.readText();
-  //   let t = document.createElement("textarea");
-  //   console.log("asking to paste into ", t);
-  //   t.value = "Copying from Figma failed. Please try again in the desktop app.";
-  //   t.style.top = "0";
-  //   t.style.left = "0";
-  //   t.style.position = "fixed";
-  //   // document.body.appendChild(t),
-  //   container.current?.appendChild(t);
-  //   t.focus(), t.select();
-  //   try {
-  //     document.execCommand("copy");
-  //     // document.execCommand("paste");
-  //   } catch (e) {
-  //     console.warn(e);
-  //   }
-  //   document.body.removeChild(t);
-  // }, [container, textField]);
-
   const askDoPaste = useCallback(() => {
     try {
       textField.current?.focus();

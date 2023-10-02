@@ -1,4 +1,4 @@
-import { Buffer } from "buffer";
+import {toByteArray} from "base64-js"
 
 const metaStart = "<!--(figmeta)";
 const metaEnd = "(/figmeta)-->";
@@ -17,13 +17,12 @@ export interface ParsedFigmaHTML {
 }
 
 function base64_decode_string(s: string): string {
-  // TODO: don't require Buffer for this
-  return Buffer.from(s, "base64").toString();
+  const bytes = toByteArray(s);
+  return new TextDecoder().decode(bytes);
 }
 
 function base64_decode_data(s: string): Uint8Array {
-  // TODO: don't require Buffer for this
-  return Buffer.from(s, "base64");
+  return toByteArray(s);
 }
 
 // Or throw exception on error

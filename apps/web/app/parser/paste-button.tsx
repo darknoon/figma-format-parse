@@ -6,6 +6,7 @@ export function PasteButton({
 }: {
   onPaste: (items: ClipboardItems) => void
 }) {
+  if (typeof navigator === "undefined") return null
   const canPaste = !!navigator.clipboard && "read" in navigator.clipboard
   return (
     <>

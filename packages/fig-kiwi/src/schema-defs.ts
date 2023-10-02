@@ -1,3 +1,4 @@
+/// This is generated code to facilitate using compiled schema definitions.
 export type MessageType =
   "JOIN_START" |
   "NODE_CHANGES" |
