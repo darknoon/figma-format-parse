@@ -12,6 +12,7 @@ import {
   Message,
   ParsedFigmaArchive,
   ParsedFigmaHTML,
+  ParsedRawKiwi,
 } from "fig-kiwi"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -26,7 +27,7 @@ import { hex, replacerForHex } from "./hex"
 import { Button } from "@/components/ui/button"
 import { compileSchema } from "kiwi-schema"
 
-type FileContents = ParsedFigmaArchive | ParsedFigmaHTML
+type FileContents = ParsedFigmaArchive | ParsedFigmaHTML | ParsedRawKiwi
 
 type NavSelection =
   | { type: "layer"; guid: GUID }

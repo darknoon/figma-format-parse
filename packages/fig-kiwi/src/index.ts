@@ -13,21 +13,24 @@ import defaultSchema from "./schema";
 
 export { type FigmaMeta, type Message, type Header, type CompiledSchema };
 
-export interface ParsedFigma {
-  header: Header;
+export interface ParsedFigmaBase {
   schema: Schema;
   message: Message;
 }
-export interface ParsedFigmaHTML extends ParsedFigma {
+export interface ParsedFigmaHTML extends ParsedFigmaBase {
   header: Header;
   meta: FigmaMeta;
   schema: Schema;
   message: Message;
 }
 
-export interface ParsedFigmaArchive extends ParsedFigma {
-  preview: Uint8Array;
+export interface ParsedFigmaArchive extends ParsedFigmaBase {
+  header: Header;
+  preview?: Uint8Array;
 }
+
+export interface ParsedRawKiwi extends ParsedFigmaBase {}
+
 
 export function readHTMLMessage(html: string): ParsedFigmaHTML {  
   const { figma, meta } = parseHTMLString(html);
@@ -80,6 +83,14 @@ export function writeFigFile(settings: {
     writer.files.push(preview);
   }
   return writer.write();
+}
+
+export function readMultiplayerMessage(data: Uint8Array): ParsedRawKiwi {
+  const infl = inflateRaw(data);
+  console.log("infl", infl);
+  const compiledSchema = compileSchema(defaultSchema) as CompiledSchema;
+  const message = compiledSchema.decodeMessage(infl);
+  return { schema: defaultSchema, message };
 }
 
 export { FigmaArchiveParser };
