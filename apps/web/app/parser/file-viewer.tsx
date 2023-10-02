@@ -4,6 +4,7 @@ import * as React from "react"
 import { Schema, prettyPrintSchema } from "kiwi-schema"
 import {
   FigmaMeta,
+  Header,
   Message,
   ParsedFigmaArchive,
   ParsedFigmaHTML,
@@ -18,6 +19,7 @@ import { TypePill } from "./type-pill"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { CodeView } from "./code-view"
 import { hex, replacerForHex } from "./hex"
+import { Button } from "@/components/ui/button"
 
 type FileContents = ParsedFigmaArchive | ParsedFigmaHTML
 
@@ -76,25 +78,52 @@ export function FigmaFile({ data }: { data: FileContents }) {
               />
             )}
             {navSelection.type === "misc" && (
-              <CodeView>{JSON.stringify(rest, null, 2)}</CodeView>
+              <Card>
+                <CardHeader>
+                  <h2 className="text-lg tracking-tight">Misc</h2>
+                </CardHeader>
+                <CardContent>
+                  <CodeView>{JSON.stringify(rest, replacerForHex, 2)}</CodeView>
+                </CardContent>
+              </Card>
             )}
-            {navSelection.type === "schema" && <Schema schema={data.schema} />}
-            {navSelection.type === "blobs" && blobs && (
-              <div className="flex flex-col space-y-4">
-                {blobs.map((b, i) => (
-                  <div key={i}>
-                    Blob({b.bytes.length} bytes)
-                    <div className="font-mono font-xs p-4 border border-gray-100 dark:border-gray-800 rounded-lg">
-                      {hex(b.bytes, " ")}
-                    </div>
-                  </div>
-                ))}
-              </div>
+            {navSelection.type === "schema" && (
+              <Schema schema={data.schema} header={data.header} />
             )}
-            {node && <Content node={node} />}
+            {navSelection.type === "blobs" && blobs && <Blobs blobs={blobs} />}
+            {node && (
+              <NodeContent
+                node={node}
+                href={
+                  "meta" in data
+                    ? figmaUrl(data.meta.fileKey, node.guid!)
+                    : undefined
+                }
+              />
+            )}
           </div>
         </ScrollArea>
       </div>
+    </div>
+  )
+}
+
+function Blobs({ blobs }: { blobs: Exclude<Message["blobs"], undefined> }) {
+  return (
+    <div className="flex flex-col space-y-4">
+      {blobs.map((b, i) => (
+        <Card key={i}>
+          <CardHeader>
+            <h2>
+              Blob {i}{" "}
+              <span className="font-medium">({b.bytes.length} bytes)</span>
+            </h2>
+          </CardHeader>
+          <CardContent className="text-gray-700 dark:text-gray-400">
+            <span className="font-mono font-xs">{hex(b.bytes, " ")}</span>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   )
 }
@@ -114,7 +143,8 @@ function FigmaPasteInfo({ meta, more }: { meta: FigmaMeta; more: PasteMore }) {
   return (
     <Card>
       <CardHeader>
-        <h2>Paste Info</h2>
+        <h2 className="text-lg tracking-tight">Paste Info</h2>
+        <FigmaLink href={figmaUrl(meta.fileKey, undefined)} />
       </CardHeader>
       <CardContent>
         <div>
@@ -172,7 +202,7 @@ function Sidebar({
   return (
     <div className="p-2 h-full flex flex-col space-y-8">
       <div>
-        <h2>Metadata</h2>
+        <h2 className="font-medium p-2 text-sm">Metadata</h2>
         <ul className="flex flex-col space-y-1">
           {type === "paste" && (
             <SidebarItem
@@ -203,8 +233,8 @@ function Sidebar({
         </ul>
       </div>
       <div>
-        <h2>Nodes</h2>
-        <ol className="flex flex-col space-y-1">
+        <h2 className="font-medium p-2 text-sm">Nodes</h2>
+        <ol className="flex flex-col space-y-1 overflow-clip">
           {nodeChanges.map((n) => {
             if (!n.guid) return null
             const { guid, name, type } = n
@@ -219,14 +249,13 @@ function Sidebar({
                 className="flex flex-row space-x-2"
               >
                 <TypePill type={type || "?"} />
-                {name || "no name"}
+                <div className="text-ellipsis whitespace-nowrap flex-1">
+                  {name || "no name"}
+                </div>
               </SidebarItem>
             )
           })}
         </ol>
-      </div>
-      <div>
-        <h2>Other</h2>
       </div>
     </div>
   )
@@ -257,18 +286,52 @@ const SidebarItem = React.forwardRef<
 
 SidebarItem.displayName = "SidebarItem"
 
-function Schema({ schema }: { schema: Schema }) {
+function Schema({ schema, header }: { schema: Schema; header: Header }) {
   return (
-    <div>
-      <CodeView>{prettyPrintSchema(schema)}</CodeView>
-    </div>
+    <Card>
+      <CardHeader>
+        <h2 className="text-lg tracking-tight">
+          Schema <span className="text-gray-500">{header.version}</span>
+        </h2>
+        <pre className="text-xs text-muted-foreground">
+          {JSON.stringify(header.prelude)}
+        </pre>
+      </CardHeader>
+      <CardContent>
+        <CodeView>{prettyPrintSchema(schema)}</CodeView>
+      </CardContent>
+    </Card>
   )
 }
 
 function formatGUID(guid: GUID) {
-  return `${guid.localID}:${guid.sessionID}`
+  return `${guid.sessionID}:${guid.localID}`
 }
 
-function Content({ node }: { node: NodeChange }) {
-  return <CodeView>{JSON.stringify(node, replacerForHex, 2)}</CodeView>
+function figmaUrl(fileKey: string, guid?: GUID) {
+  const name = "Untitled"
+  const nid = guid ? `?node-id=${formatGUID(guid)}` : ""
+  return `https://www.figma.com/file/${fileKey}/${name}${nid}`
+}
+
+function FigmaLink({ href, name }: { href?: string; name?: string }) {
+  if (!href) return null
+  return (
+    <a href={href} target="_blank" rel="noreferrer" className="underlin mb-2">
+      <Button>{name ? `Open ${name} in Figma ->` : `Open in Figma ->`}</Button>
+    </a>
+  )
+}
+
+function NodeContent({ node, href }: { node: NodeChange; href?: string }) {
+  return (
+    <Card>
+      <CardHeader>
+        <FigmaLink href={href} />
+      </CardHeader>
+      <CardContent>
+        <CodeView>{JSON.stringify(node, replacerForHex, 2)}</CodeView>
+      </CardContent>
+    </Card>
+  )
 }

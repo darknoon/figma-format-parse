@@ -11,9 +11,8 @@ import {
 } from "fig-kiwi"
 import AsyncOperation, { LoaderState, ProgressUpdate } from "./async-operation"
 import { PasteButton } from "./paste-button"
-import { Progress } from "@/components/ui/progress"
 import { FigmaFile } from "./file-viewer"
-import { cn } from "@/lib/utils"
+import { Loading } from "./loading-ui"
 
 export default function AcceptInput() {
   const [file, setFile] = useState<File | null>(null)
@@ -89,9 +88,9 @@ export default function AcceptInput() {
           onDrop={onDrop}
           onPaste={onPaste}
           onDragOver={(e) => e.preventDefault()} // Required to make droppable area
-          className="flex min-h-screen flex-col items-center justify-between p-24 w-full"
+          className="flex min-h-screen flex-col items-center justify-between p-24 w-ful"
         >
-          <div className="h-full border-2 border-dashed border-gray-400 rounded-xl align-center gap-4 flex flex-col items-center max-w-sm">
+          <div className="border-2 border-dashed border-gray-400 rounded-xl align-center gap-4 flex flex-col items-center max-w-sm">
             <div className="p-8">
               <PasteButton onPaste={onPasteButton} />
             </div>
@@ -100,6 +99,9 @@ export default function AcceptInput() {
               <Input id="file" type="file" onChange={onFileChange} />
             </div>
           </div>
+          <p className="text-sm text-muted-foreground">
+            Your data is processed locally in the browser
+          </p>
         </div>
       )}
     </>
@@ -139,24 +141,4 @@ async function* parseClipboard(
   yield { message: "Done" }
   await smallDelay()
   return result
-}
-
-function Loading({
-  up,
-  className,
-}: {
-  up: ProgressUpdate
-  className?: string
-}) {
-  if (up.progress) {
-    const value = (up.progress.current / up.progress.total) * 100
-    return (
-      <div className={cn("w-full max-w-sm", className)}>
-        {up.message}
-        <Progress value={value} />
-      </div>
-    )
-  } else {
-    return <div>{up.message}</div>
-  }
 }

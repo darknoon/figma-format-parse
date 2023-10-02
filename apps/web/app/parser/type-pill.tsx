@@ -164,7 +164,7 @@ export function TypePill({ type }: { type: string }) {
   return (
     <span
       className={cn(
-        "mr-2 rounded-md text-ellipsis w-12 text-center self-baseline px-1 py-0.5 text-xs font-medium",
+        "block mr-2 rounded-md text-ellipsis w-12 text-center self-baseline px-1 py-0.5 text-xs font-medium",
         colorType(type)
       )}
     >
