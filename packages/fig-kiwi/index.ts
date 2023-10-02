@@ -11,16 +11,25 @@ import { deflateRaw, inflateRaw } from "pako";
 // Exports as the parsed default schema
 import defaultSchema from "./schema";
 
-export { type FigmaMeta };
+export { type FigmaMeta, type Message, type Header };
 
-interface ParsedFigma {
+export interface ParsedFigma {
+  header: Header;
+  schema: Schema;
+  message: Message;
+}
+export interface ParsedFigmaHTML extends ParsedFigma {
   header: Header;
   meta: FigmaMeta;
   schema: Schema;
   message: Message;
 }
 
-export function readHTMLMessage(html: string): ParsedFigma {  
+export interface ParsedFigmaArchive extends ParsedFigma {
+  preview: Uint8Array;
+}
+
+export function readHTMLMessage(html: string): ParsedFigmaHTML {  
   const { figma, meta } = parseHTMLString(html);
   const { header, files } = FigmaArchiveParser.parseArchive(figma);
   const [schemaCompressed, dataCompressed] = files;
@@ -43,12 +52,7 @@ export function writeHTMLMessage(m: {
   });
 }
 
-export function readFigFile(data: Uint8Array): {
-  schema: Schema;
-  header: Header;
-  message: Message;
-  preview: Uint8Array;
-} {
+export function readFigFile(data: Uint8Array): ParsedFigmaArchive {
   const { header, files } = FigmaArchiveParser.parseArchive(data);
   const [schemaFile, dataFile, preview] = files;
   const fileSchema = decodeBinarySchema(inflateRaw(schemaFile));

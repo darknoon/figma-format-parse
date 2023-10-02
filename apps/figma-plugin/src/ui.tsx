@@ -16,14 +16,14 @@ import {
   FigmaMeta,
   readHTMLMessage,
   writeHTMLMessage,
-} from "../modules/fig-kiwi/index";
+} from "fig-kiwi/index";
 import { Buffer } from "buffer";
 
 import { CloseHandler } from "./types";
-import { SparseMessage } from "../modules/fig-kiwi/fig-kiwi";
+import { SparseMessage } from "fig-kiwi/fig-kiwi";
 import { compileSchema, Schema, prettyPrintSchema } from "kiwi-schema";
-import { Message } from "../modules/fig-kiwi/schema-defs";
-import { Header } from "../modules/fig-kiwi/archive";
+import { Message } from "fig-kiwi/schema-defs";
+import { Header } from "fig-kiwi/archive";
 
 const bytesReplacer = (key: string, value: any): any => {
   if (
