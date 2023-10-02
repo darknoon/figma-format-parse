@@ -11,7 +11,7 @@ import { deflateRaw, inflateRaw } from "pako";
 // Exports as the parsed default schema
 import defaultSchema from "./schema";
 
-export { type FigmaMeta, type Message, type Header };
+export { type FigmaMeta, type Message, type Header, type CompiledSchema };
 
 export interface ParsedFigma {
   header: Header;

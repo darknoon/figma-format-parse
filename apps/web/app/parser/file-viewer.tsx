@@ -1,8 +1,10 @@
 "use client"
 import * as React from "react"
+import { useMemo } from "react"
 
 import { Schema, prettyPrintSchema } from "kiwi-schema"
 import {
+  CompiledSchema,
   FigmaMeta,
   Header,
   Message,
@@ -20,6 +22,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { CodeView } from "./code-view"
 import { hex, replacerForHex } from "./hex"
 import { Button } from "@/components/ui/button"
+import { compileSchema } from "kiwi-schema"
 
 type FileContents = ParsedFigmaArchive | ParsedFigmaHTML
 
@@ -94,6 +97,7 @@ export function FigmaFile({ data }: { data: FileContents }) {
             {node && (
               <NodeContent
                 node={node}
+                schema={data.schema}
                 href={
                   "meta" in data
                     ? figmaUrl(data.meta.fileKey, node.guid!)
@@ -119,8 +123,10 @@ function Blobs({ blobs }: { blobs: Exclude<Message["blobs"], undefined> }) {
               <span className="font-medium">({b.bytes.length} bytes)</span>
             </h2>
           </CardHeader>
-          <CardContent className="text-gray-700 dark:text-gray-400">
-            <span className="font-mono font-xs">{hex(b.bytes, " ")}</span>
+          <CardContent>
+            <span className="font-mono font-xs text-gray-700 dark:text-gray-400">
+              {hex(b.bytes, " ")}
+            </span>
           </CardContent>
         </Card>
       ))}
@@ -323,14 +329,42 @@ function FigmaLink({ href, name }: { href?: string; name?: string }) {
   )
 }
 
-function NodeContent({ node, href }: { node: NodeChange; href?: string }) {
+function NodeContent({
+  node,
+  schema,
+  href,
+}: {
+  node: NodeChange
+  schema: Schema
+  href?: string
+}) {
+  const compiledSchema: CompiledSchema = useMemo(() => {
+    const compiledSchema = compileSchema(schema) as CompiledSchema
+    console.log("compiled schema", compiledSchema)
+    return compiledSchema
+  }, [schema])
+  const data = useMemo(() => {
+    if (!node.guid) return
+    return compiledSchema.encodeNodeChange(node)
+  }, [node, compiledSchema])
+
+  const decoded = JSON.stringify(node, replacerForHex, 2)
   return (
     <Card>
       <CardHeader>
         <FigmaLink href={href} />
       </CardHeader>
       <CardContent>
-        <CodeView>{JSON.stringify(node, replacerForHex, 2)}</CodeView>
+        <h3>As JSON ({decoded.length} bytes)</h3>
+        <CodeView>{decoded}</CodeView>
+        {data && (
+          <>
+            <h3>As kiwi ({data.length} bytes)</h3>
+            <p className="font-xs font-mono text-gray-700 dark:text-gray-400">
+              {hex(data, " ")}
+            </p>
+          </>
+        )}
       </CardContent>
     </Card>
   )
