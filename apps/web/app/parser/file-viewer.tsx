@@ -16,12 +16,14 @@ import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { TypePill } from "./type-pill"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { CodeView } from "./code-view"
 
 type FileContents = ParsedFigmaArchive | ParsedFigmaHTML
 
 type NavSelection =
   | { type: "layer"; guid: GUID }
   | { type: "meta" }
+  | { type: "misc" }
   | { type: "schema" }
 
 export function FigmaFile({ data }: { data: FileContents }) {
@@ -30,10 +32,14 @@ export function FigmaFile({ data }: { data: FileContents }) {
   })
   const node =
     navSelection.type == "layer" && selectedNode(data.message, navSelection)
+  const { message } = data
+  const { nodeChanges = [], ...rest } = message
+  const type = "meta" in data ? "paste" : "file"
   return (
     <div className="flex flex-row h-full min-h-screen">
       <ScrollArea className="max-w-sm h-full min-h-screen border-r-gray-200 border-r p-2">
         <Sidebar
+          type={type}
           message={data.message}
           navSelection={navSelection}
           setNavSelection={setNavSelection}
@@ -41,7 +47,10 @@ export function FigmaFile({ data }: { data: FileContents }) {
       </ScrollArea>
       <ScrollArea className="flex-1 h-full p-8">
         {navSelection.type == "meta" && "meta" in data && (
-          <FigmaMeta meta={data.meta} />
+          <FigmaPasteInfo meta={data.meta} more={pick(message)} />
+        )}
+        {navSelection.type == "misc" && (
+          <CodeView>{JSON.stringify(rest, null, 2)}</CodeView>
         )}
         {navSelection.type == "schema" && <Schema schema={data.schema} />}
         {node && <Content node={node} />}
@@ -50,7 +59,30 @@ export function FigmaFile({ data }: { data: FileContents }) {
   )
 }
 
-function FigmaMeta({ meta }: { meta: FigmaMeta }) {
+type PasteMore = Pick<
+  Message,
+  | "pasteID"
+  | "pasteFileKey"
+  | "pasteBranchSourceFileKey"
+  | "pasteIsPartiallyOutsideEnclosingFrame"
+>
+
+export function pick(message: Message): PasteMore {
+  const {
+    pasteID,
+    pasteFileKey,
+    pasteBranchSourceFileKey,
+    pasteIsPartiallyOutsideEnclosingFrame,
+  } = message
+  return {
+    pasteID,
+    pasteFileKey,
+    pasteBranchSourceFileKey,
+    pasteIsPartiallyOutsideEnclosingFrame,
+  }
+}
+
+function FigmaPasteInfo({ meta, more }: { meta: FigmaMeta; more: PasteMore }) {
   return (
     <Card>
       <CardHeader>
@@ -64,6 +96,22 @@ function FigmaMeta({ meta }: { meta: FigmaMeta }) {
         <div>
           <Label htmlFor="dataType">Data Type</Label>
           <Input id="dataType" value={meta.dataType} readOnly />
+        </div>
+        <div>
+          <Label htmlFor="pasteID">Paste ID</Label>
+          <Input id="pasteID" value={meta.pasteID} readOnly />
+        </div>
+        <div>
+          <Label htmlFor="pasteFileKey">Paste File Key</Label>
+          <Input id="pasteFileKey" value={more.pasteFileKey ?? ""} readOnly />
+        </div>
+        <div>
+          <Label htmlFor="pasteBranchSourceFileKey">Branch Source File</Label>
+          <Input
+            id="pasteBranchSourceFileKey"
+            value={more.pasteBranchSourceFileKey ?? ""}
+            readOnly
+          />
         </div>
       </CardContent>
     </Card>
@@ -82,34 +130,45 @@ function selectedNode(message: Message, navSelection: NavSelection) {
 }
 
 function Sidebar({
+  type,
   message,
   navSelection,
   setNavSelection,
 }: {
+  type: "paste" | "file"
   message: Message
   navSelection: NavSelection
   setNavSelection: (navSelection: NavSelection) => void
 }) {
+  const { nodeChanges = [] } = message
   return (
     <div className="min-h-screen">
       <h2>Metadata</h2>
       <ul>
-        <SidebarItem
-          onClick={() => setNavSelection({ type: "meta" })}
-          selected={navSelection.type === "meta"}
-        >
-          Meta
-        </SidebarItem>
+        {type === "paste" && (
+          <SidebarItem
+            onClick={() => setNavSelection({ type: "meta" })}
+            selected={navSelection.type === "meta"}
+          >
+            Paste Info
+          </SidebarItem>
+        )}
         <SidebarItem
           onClick={() => setNavSelection({ type: "schema" })}
           selected={navSelection.type === "schema"}
         >
           Schema
         </SidebarItem>
+        <SidebarItem
+          onClick={() => setNavSelection({ type: "misc" })}
+          selected={navSelection.type === "misc"}
+        >
+          Misc
+        </SidebarItem>
       </ul>
       <h2>Nodes</h2>
       <ol className="flex flex-col space-y-1">
-        {message.nodeChanges?.map((n) => {
+        {nodeChanges.map((n) => {
           if (!n.guid) return null
           const { guid, name, type } = n
           return (
@@ -128,6 +187,7 @@ function Sidebar({
           )
         })}
       </ol>
+      <h2>Other</h2>
     </div>
   )
 }
@@ -156,21 +216,6 @@ const SidebarItem = React.forwardRef<
 })
 
 SidebarItem.displayName = "SidebarItem"
-
-const CodeView = React.forwardRef<
-  HTMLPreElement,
-  React.HTMLAttributes<HTMLPreElement>
->(({ className, ...props }, ref) => (
-  <pre
-    ref={ref}
-    className={cn(
-      "text-xs bg-gray-100 dark:bg-gray-800 rounded-md p-2",
-      className
-    )}
-    {...props}
-  />
-))
-CodeView.displayName = "CodeView"
 
 function Schema({ schema }: { schema: Schema }) {
   return (
