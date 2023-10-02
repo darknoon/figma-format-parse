@@ -1,6 +1,7 @@
 "use client"
 import * as React from "react"
 import { useMemo } from "react"
+import cl100k_base from "tiktoken/encoders/cl100k_base.json"
 
 import { fromByteArray } from "base64-js"
 
@@ -25,6 +26,7 @@ import { CodeView } from "./code-view"
 import { hex, replacerForHex } from "./hex"
 import { Button } from "@/components/ui/button"
 import { compileSchema } from "kiwi-schema"
+import AsyncOperation, { LoaderState, GenT } from "./async-operation"
 
 type FileContents = ParsedFigmaArchive | ParsedFigmaHTML
 
@@ -379,29 +381,187 @@ function NodeContent({
     console.log("compiled schema", compiledSchema)
     return compiledSchema
   }, [schema])
+
   const data = useMemo(() => {
     if (!node.guid) return
     return compiledSchema.encodeNodeChange(node)
   }, [node, compiledSchema])
 
   const decoded = JSON.stringify(node, replacerForHex, 2)
+  const decodedNotPretty = JSON.stringify(node, replacerForHex, undefined)
+
   return (
-    <Card>
-      <CardHeader>
-        <FigmaLink href={href} />
-      </CardHeader>
-      <CardContent>
-        <h3>As JSON ({decoded.length} bytes)</h3>
-        <CodeView>{decoded}</CodeView>
-        {data && (
-          <>
+    <div className="flex flex-col space-y-4">
+      <Card>
+        <CardHeader>
+          <FigmaLink href={href} />
+          {node.name && <h2 className="text-lg tracking-tight">{node.name}</h2>}
+        </CardHeader>
+      </Card>
+      <Card>
+        <CardHeader>
+          <h3>As JSON ({decoded.length} bytes)</h3>
+        </CardHeader>
+        <CardContent>
+          <CodeView>{decoded}</CodeView>
+        </CardContent>
+      </Card>
+      {data && (
+        <Card>
+          <CardHeader>
             <h3>As kiwi ({data.length} bytes)</h3>
+          </CardHeader>
+          <CardContent>
             <p className="font-xs font-mono text-gray-700 dark:text-gray-400">
               {hex(data, " ")}
             </p>
+          </CardContent>
+        </Card>
+      )}
+      <AsyncOperation input={decodedNotPretty} operation={tokenize}>
+        {(state: LoaderState<[Uint32Array, string[]]>) => (
+          <>
+            {state.status == "loading" && (
+              <p>
+                {state.message} {state.progress?.current}/
+                {state.progress?.total}
+              </p>
+            )}
+            {state.status == "done" && (
+              <Tokens
+                text={decodedNotPretty}
+                tokens={state.data[0]}
+                detokenized={state.data[1]}
+              />
+            )}
+            {state.status === "error" && (
+              <div>token error: {state.error.message}</div>
+            )}
           </>
         )}
+      </AsyncOperation>
+    </div>
+  )
+}
+
+import type { Tiktoken } from "tiktoken/lite"
+let _encoding: Tiktoken | undefined
+
+function Tokens({
+  text,
+  tokens,
+  detokenized,
+}: {
+  text: string
+  tokens: Uint32Array
+  detokenized: string[]
+}) {
+  const [hoveredIndex, setHoveredIndex] = useState<number | undefined>()
+  return (
+    <Card>
+      <CardHeader>
+        <h3>
+          For GPT <span>({tokens.length} tokens)</span>
+        </h3>
+      </CardHeader>
+
+      <CardContent>
+        <div
+          onMouseLeave={(e) => setHoveredIndex(undefined)}
+          className="flex flex-col space-y-4"
+        >
+          <p className="font-xs font-mono text-gray-700 dark:text-gray-400">
+            {detokenized.map((s, i) => (
+              <span
+                key={`tk${s}${i}`}
+                onMouseEnter={(e) => setHoveredIndex(i)}
+                className={cn(
+                  "break-all",
+                  "rounded-sm",
+                  (!hoveredIndex || hoveredIndex === i) &&
+                    COLORS[i % COLORS.length]
+                )}
+              >
+                {s.replaceAll("\n", "\\n")}
+              </span>
+            ))}
+          </p>
+          <p className="font-xs font-mono text-gray-700 dark:text-gray-400">
+            {Array.from(tokens).map((t, i) => (
+              <span key={`tki${t}${i}`}>
+                <span
+                  onMouseEnter={(e) => setHoveredIndex(i)}
+                  className={cn(
+                    "rounded-sm",
+                    (!hoveredIndex || hoveredIndex === i) &&
+                      COLORS[i % COLORS.length]
+                  )}
+                >
+                  {t.toString(10)}
+                </span>
+                {", "}
+              </span>
+            ))}
+          </p>
+        </div>
       </CardContent>
     </Card>
   )
+}
+
+async function loadEncoding(): Promise<Tiktoken> {
+  if (_encoding) return _encoding
+  const { Tiktoken } = await import("tiktoken/lite")
+  const encoding = new Tiktoken(
+    cl100k_base.bpe_ranks,
+    cl100k_base.special_tokens,
+    cl100k_base.pat_str
+  )
+  _encoding = encoding
+  return encoding
+}
+
+async function* tokenize(text: string): GenT<[Uint32Array, string[]]> {
+  yield { message: "Loading tiktoken (WASM)" }
+  const encoding = await loadEncoding()
+  yield { message: "Encoding data" }
+  const tokens = encoding.encode(text)
+  yield { message: "Done" }
+  await smallDelay()
+  yield { message: "Decoding tokens" }
+  const textDecoder = new TextDecoder()
+  await smallDelay()
+  const strs = Array.from(tokens).map((t) => {
+    const bytes = encoding.decode_single_token_bytes(t)
+    return textDecoder.decode(bytes)
+  })
+
+  return [tokens, strs]
+}
+
+// via https://github.com/dqbd/tiktokenizer/blob/cea57c454f38001a91873c944cee6a9b8e2a0610/src/sections/TokenViewer.tsx#L7C1-L8C1
+const COLORS = [
+  "bg-sky-200",
+  "bg-amber-200",
+  "bg-blue-200",
+  "bg-green-200",
+  "bg-orange-200",
+  "bg-cyan-200",
+  "bg-gray-200",
+  "bg-purple-200",
+  "bg-indigo-200",
+  "bg-lime-200",
+  "bg-rose-200",
+  "bg-violet-200",
+  "bg-yellow-200",
+  "bg-emerald-200",
+  "bg-zinc-200",
+  "bg-red-200",
+  "bg-fuchsia-200",
+  "bg-pink-200",
+  "bg-teal-200",
+]
+
+async function smallDelay() {
+  return new Promise((resolve) => setTimeout(resolve, 50))
 }
