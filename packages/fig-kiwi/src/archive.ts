@@ -1,6 +1,7 @@
 export type Header = { prelude: string; version: number };
 
 const FIG_KIWI_PRELUDE = "fig-kiwi";
+const FIGJAM_KIWI_PRELUDE = "fig-jam.";
 const FIG_KIWI_VERSION = 15;
 
 export default class FigmaArchiveParser {
@@ -34,7 +35,7 @@ export default class FigmaArchiveParser {
     const preludeData = this.read(FIG_KIWI_PRELUDE.length);
     // @ts-ignore todo: either downlevel-iteration or a type mismatch here
     const prelude = String.fromCharCode.apply(String, preludeData);
-    if (prelude != FIG_KIWI_PRELUDE) {
+    if (prelude !== FIG_KIWI_PRELUDE && prelude !== FIGJAM_KIWI_PRELUDE) {
       throw new Error(`Unexpected prelude: "${prelude}"`);
     }
     const version = this.readUint32();
