@@ -13,7 +13,7 @@ import { writeHTMLMessage, readHTMLMessage } from "./index";
 import schema from "./schema";
 
 test("parses components from html string", () => {
-  const str = readFileSync(__dirname + "/data/c00000-circle-paste.html", {
+  const str = readFileSync(__dirname + "/../data/c00000-circle-paste.html", {
     encoding: "utf-8",
   });
 
@@ -29,7 +29,7 @@ test("parses components from html string", () => {
 
   // Just to make debugging easier, extract the file
   writeFileSync(
-    __dirname + "/data/c00000-circle-paste.fig",
+    __dirname + "/../data/c00000-circle-paste.fig",
     new Uint8Array(figma)
   );
 
@@ -46,15 +46,15 @@ test("parses components from html string", () => {
 });
 
 test("parses newer format", () => {
-  const str = readFileSync(__dirname + "/data/newer-paste.html", {
+  const str = readFileSync(__dirname + "/../data/newer-paste.html", {
     encoding: "utf-8",
   });
 
   const { figma, meta } = parseHTMLString(str);
 
   expect(meta).toEqual({
-    fileKey: "whhd71XEXzYNauiHCeztfu",
-    pasteID: 2130739331,
+    fileKey: "cJmUnNwamOUm4KNSqP8oRn",
+    pasteID: 167243889,
     dataType: "scene",
   });
 
@@ -62,7 +62,7 @@ test("parses newer format", () => {
 
   // Just to make debugging easier, extract the file
   writeFileSync(
-    __dirname + "/data/newer-paste.fig",
+    __dirname + "/../data/newer-paste.fig",
     new Uint8Array(figma)
   );
 
@@ -74,14 +74,14 @@ test("parses newer format", () => {
 
   const cs = compileSchema(fileSchema) as CompiledSchema;
 
-  const message: SparseMessage = cs.decodeSparseMessage(inflateRaw(dataFile));
+  const message: SparseMessage = cs.decodeMessage(inflateRaw(dataFile));
   expect(message).toMatchSnapshot();
 });
 
 
 test("write canned message to html", () => {
   const message: Message = JSON.parse(
-    readFileSync(__dirname + "/data/grey-circle-paste.json", {
+    readFileSync(__dirname + "/../data/grey-circle-paste.json", {
       encoding: "utf8",
     })
   );
@@ -92,7 +92,7 @@ test("write canned message to html", () => {
     message,
   });
 
-  writeFileSync(__dirname + "/gen/grey-circle-regen.html", html);
+  writeFileSync(__dirname + "/../gen/grey-circle-regen.html", html);
   expect(html).toMatchSnapshot();
 });
 
@@ -284,7 +284,7 @@ test("write html string", () => {
   });
 
   expect(html).not.toBeNull();
-  writeFileSync(__dirname + "/gen/just-ellipse.html", html);
+  writeFileSync(__dirname + "/../gen/just-ellipse.html", html);
 
   const rt = readHTMLMessage(html);
   // Numbers don't exactly equal :(
@@ -296,7 +296,7 @@ test("write html string", () => {
 });
 
 test("failing test case", () => {
-  const html = readFileSync(__dirname + "/data/widget-paste.html", {
+  const html = readFileSync(__dirname + "/../data/widget-paste.html", {
     encoding: "utf8",
   });
   const { message } = readHTMLMessage(html);

@@ -1,4 +1,4 @@
-import AcceptInput from './parser/accept-input'
+import AcceptInput from "./parser/accept-input"
 
 export default function Home() {
   return (

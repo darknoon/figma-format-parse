@@ -1,5 +1,5 @@
-'use client'
-import React, { useEffect, useReducer, useState } from 'react'
+"use client"
+import React, { useEffect, useReducer, useState } from "react"
 
 export type ProgressUpdate = { message?: string; progress?: DefiniteProgress }
 
@@ -10,21 +10,21 @@ export interface DefiniteProgress {
 export type GenT<Output> = AsyncGenerator<ProgressUpdate, Output>
 
 export type LoaderState<Output> =
-  | { status: 'idle' }
+  | { status: "idle" }
   | {
-      status: 'loading'
+      status: "loading"
       startTime: number
       message?: string
       progress?: DefiniteProgress
       operation: GenT<Output>
     }
-  | { status: 'done'; data: Output }
-  | { status: 'error'; error: Error }
+  | { status: "done"; data: Output }
+  | { status: "error"; error: Error }
 
 export type AsyncOperationProps<
   Input,
   Output,
-  Operation extends (input: Input) => AsyncGenerator<ProgressUpdate, Output>
+  Operation extends (input: Input) => AsyncGenerator<ProgressUpdate, Output>,
 > = {
   input: Input
   operation: Operation
@@ -34,26 +34,26 @@ export type AsyncOperationProps<
 export default function AsyncOperation<
   Input,
   Output,
-  Operation extends (input: Input) => AsyncGenerator<ProgressUpdate, Output>
+  Operation extends (input: Input) => AsyncGenerator<ProgressUpdate, Output>,
 >({
   input,
   operation,
   children,
 }: AsyncOperationProps<Input, Output, Operation>) {
-  const [state, setState] = useState<LoaderState<Output>>({ status: 'idle' })
+  const [state, setState] = useState<LoaderState<Output>>({ status: "idle" })
 
   useEffect(() => {
-    if (state.status !== 'idle') {
+    if (state.status !== "idle") {
       return
     }
     const startTime = Date.now()
     setState({
-      status: 'loading',
+      status: "loading",
       startTime,
       operation: operation(input),
     })
     const run = async () => {
-      if ('loading' in state) {
+      if ("loading" in state) {
         return
       }
       let result: Output | undefined
@@ -62,11 +62,11 @@ export default function AsyncOperation<
         while (true) {
           const { value, done } = await generator.next(result)
           if (done) {
-            setState(() => ({ status: 'done', data: value }))
+            setState(() => ({ status: "done", data: value }))
             return
           } else {
             setState(() => ({
-              status: 'loading',
+              status: "loading",
               startTime,
               message: value.message,
               progress: value.progress,
@@ -77,7 +77,7 @@ export default function AsyncOperation<
       } catch (error) {
         if (error instanceof Error) {
           const _error = error
-          setState(() => ({ status: 'error', error: _error }))
+          setState(() => ({ status: "error", error: _error }))
         } else {
           throw error
         }

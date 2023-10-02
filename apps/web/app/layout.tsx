@@ -1,12 +1,12 @@
-import './globals.css'
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import "./globals.css"
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: 'fig-kiwi debugger',
-  description: 'Just a web app',
+  title: "fig-kiwi debugger",
+  description: "Just a web app",
 }
 
 export default function RootLayout({

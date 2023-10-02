@@ -1,4 +1,4 @@
-import ExampleFile from './client'
+import ExampleFile from "./client"
 
 export default function ExampleFilePage() {
   return (

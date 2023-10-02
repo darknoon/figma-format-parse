@@ -23,13 +23,13 @@ test.skip("this just formats the schema", () => {
 });
 
 test("able to parse figma kiwi", () => {
-  const data = readFileSync(__dirname + "/data/blue-circle.fig");
+  const data = readFileSync(__dirname + "/../data/blue-circle.fig");
   const parsed = FigmaArchiveParser.parseArchive(data);
   expect(parsed.header.version).toBe(15);
   const [schemaFile, dataFile, previewFile] = parsed.files;
   const figDataDec = inflateRaw(dataFile);
   expect(figDataDec.length).toBeGreaterThan(100);
-  writeFileSync(__dirname + "/data/blue-circle.fig-inflated", figDataDec);
+  writeFileSync(__dirname + "/../data/blue-circle.fig-inflated", figDataDec);
   const fileSchema = decodeBinarySchema(inflateRaw(schemaFile));
   expect(fileSchema).toHaveProperty("definitions");
   const compiledSchema = compileSchema(fileSchema) as CompiledSchema;
@@ -39,10 +39,10 @@ test("able to parse figma kiwi", () => {
 
 test("compare red and blue", () => {
   const blue = readFigFile(
-    readFileSync(__dirname + "/data/blue-circle.fig")
+    readFileSync(__dirname + "/../data/blue-circle.fig")
   ).message;
   const red = readFigFile(
-    readFileSync(__dirname + "/data/red-circle.fig")
+    readFileSync(__dirname + "/../data/red-circle.fig")
   ).message;
   expect(blue).toMatchSnapshot();
 });
@@ -56,12 +56,12 @@ test("able to enc dec a known message", () => {
 });
 
 test("it's compressed binary kiwi format in the metadata", () => {
-  const meta = readFileSync(__dirname + "/data/red-circle.fig-meta");
+  const meta = readFileSync(__dirname + "/../data/red-circle.fig-meta");
   const schemaBin = inflateRaw(meta);
-  writeFileSync(__dirname + "/data/red-circle.bkiwi", schemaBin);
+  writeFileSync(__dirname + "/../data/red-circle.bkiwi", schemaBin);
   const figMetaSchema = decodeBinarySchema(schemaBin);
   writeFileSync(
-    __dirname + "/data/red-circle.kiwi",
+    __dirname + "/../data/red-circle.kiwi",
     prettyPrintSchema(figMetaSchema)
   );
 
@@ -74,7 +74,7 @@ test("it's compressed binary kiwi format in the metadata", () => {
 
 test("able to decode a real websocket message", () => {
   const cs = compileSchema(schema) as CompiledSchema;
-  const dataCompressed = readFileSync(__dirname + "/data/set-black.bin");
+  const dataCompressed = readFileSync(__dirname + "/../data/set-black.bin");
   const data = inflateRaw(dataCompressed);
   const decoded = cs.decodeMessage(data);
   expect(decoded).not.toBeNull();
@@ -100,7 +100,7 @@ test("able to write a Message to an archive", () => {
   const binSchema = encodeBinarySchema(schema);
   const compiledSchema = compileSchema(schema) as CompiledSchema;
   const message: SparseMessage = JSON.parse(
-    readFileSync(__dirname + "/data/grey-circle-paste.json", {
+    readFileSync(__dirname + "/../data/grey-circle-paste.json", {
       encoding: "utf8",
     })
   );
@@ -110,5 +110,5 @@ test("able to write a Message to an archive", () => {
     deflateRaw(compiledSchema.encodeMessage(message)),
   ];
   const data = encoder.write();
-  writeFileSync(__dirname + "/data/grey-circle-paste-generated.fig", data);
+  writeFileSync(__dirname + "/../data/grey-circle-paste-generated.fig", data);
 });

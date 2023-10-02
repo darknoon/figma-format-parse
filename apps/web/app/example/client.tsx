@@ -1,8 +1,8 @@
-'use client'
+"use client"
 // works around lack of Buffer in nextjs server rendering
 
-import { readHTMLMessage } from 'fig-kiwi'
-import { FigmaFile } from '../parser/file-viewer'
+import { readHTMLMessage } from "fig-kiwi"
+import { FigmaFile } from "../parser/file-viewer"
 
 const html = `
 <meta charset="utf-8" /><span

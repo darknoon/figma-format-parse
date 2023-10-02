@@ -1,18 +1,18 @@
-'use client'
-import { Button } from '@/components/ui/button'
+"use client"
+import { Button } from "@/components/ui/button"
 
 export function PasteButton({
   onPaste,
 }: {
   onPaste: (items: ClipboardItems) => void
 }) {
-  const canPaste = !!navigator.clipboard && 'read' in navigator.clipboard
+  const canPaste = !!navigator.clipboard && "read" in navigator.clipboard
   return (
     <>
       {canPaste ? (
         <Button
           onClick={() => {
-            if (navigator.clipboard && 'read' in navigator.clipboard) {
+            if (navigator.clipboard && "read" in navigator.clipboard) {
               navigator.clipboard.read().then(onPaste)
             }
           }}

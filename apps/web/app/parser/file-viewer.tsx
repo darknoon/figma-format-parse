@@ -1,35 +1,35 @@
-'use client'
-import * as React from 'react'
+"use client"
+import * as React from "react"
 
-import { Schema, prettyPrintSchema } from 'kiwi-schema'
+import { Schema, prettyPrintSchema } from "kiwi-schema"
 import {
   FigmaMeta,
   Message,
   ParsedFigmaArchive,
   ParsedFigmaHTML,
-} from 'fig-kiwi'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { GUID, NodeChange } from 'fig-kiwi/schema-defs'
-import { useState } from 'react'
-import { cn } from '@/lib/utils'
-import { TypePill } from './type-pill'
-import { ScrollArea } from '@/components/ui/scroll-area'
+} from "fig-kiwi"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { GUID, NodeChange } from "fig-kiwi/schema-defs"
+import { useState } from "react"
+import { cn } from "@/lib/utils"
+import { TypePill } from "./type-pill"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 type FileContents = ParsedFigmaArchive | ParsedFigmaHTML
 
 type NavSelection =
-  | { type: 'layer'; guid: GUID }
-  | { type: 'meta' }
-  | { type: 'schema' }
+  | { type: "layer"; guid: GUID }
+  | { type: "meta" }
+  | { type: "schema" }
 
 export function FigmaFile({ data }: { data: FileContents }) {
   const [navSelection, setNavSelection] = useState<NavSelection>({
-    type: 'meta',
+    type: "meta",
   })
   const node =
-    navSelection.type == 'layer' && selectedNode(data.message, navSelection)
+    navSelection.type == "layer" && selectedNode(data.message, navSelection)
   return (
     <div className="flex flex-row h-full min-h-screen">
       <ScrollArea className="max-w-sm h-full min-h-screen border-r-gray-200 border-r p-2">
@@ -40,10 +40,10 @@ export function FigmaFile({ data }: { data: FileContents }) {
         />
       </ScrollArea>
       <ScrollArea className="flex-1 h-full p-8">
-        {navSelection.type == 'meta' && 'meta' in data && (
+        {navSelection.type == "meta" && "meta" in data && (
           <FigmaMeta meta={data.meta} />
         )}
-        {navSelection.type == 'schema' && <Schema schema={data.schema} />}
+        {navSelection.type == "schema" && <Schema schema={data.schema} />}
         {node && <Content node={node} />}
       </ScrollArea>
     </div>
@@ -71,7 +71,7 @@ function FigmaMeta({ meta }: { meta: FigmaMeta }) {
 }
 
 function selectedNode(message: Message, navSelection: NavSelection) {
-  if (navSelection.type === 'layer') {
+  if (navSelection.type === "layer") {
     return message.nodeChanges?.find(
       (n) =>
         n.guid &&
@@ -95,14 +95,14 @@ function Sidebar({
       <h2>Metadata</h2>
       <ul>
         <SidebarItem
-          onClick={() => setNavSelection({ type: 'meta' })}
-          selected={navSelection.type === 'meta'}
+          onClick={() => setNavSelection({ type: "meta" })}
+          selected={navSelection.type === "meta"}
         >
           Meta
         </SidebarItem>
         <SidebarItem
-          onClick={() => setNavSelection({ type: 'schema' })}
-          selected={navSelection.type === 'schema'}
+          onClick={() => setNavSelection({ type: "schema" })}
+          selected={navSelection.type === "schema"}
         >
           Schema
         </SidebarItem>
@@ -116,14 +116,14 @@ function Sidebar({
             <SidebarItem
               key={formatGUID(guid)}
               selected={
-                navSelection.type === 'layer' &&
+                navSelection.type === "layer" &&
                 formatGUID(navSelection.guid) === formatGUID(guid)
               }
-              onClick={() => setNavSelection({ type: 'layer', guid })}
+              onClick={() => setNavSelection({ type: "layer", guid })}
               className="flex flex-row space-x-2"
             >
-              <TypePill type={type || '?'} />
-              {name || 'no name'}
+              <TypePill type={type || "?"} />
+              {name || "no name"}
             </SidebarItem>
           )
         })}
@@ -143,10 +143,10 @@ const SidebarItem = React.forwardRef<
       ref={ref}
       className={cn(
         className,
-        'rounded-sm p-1 pl-2 pr-3',
-        'hover:bg-gray-200 dark:hover:bg-gray-800',
+        "rounded-sm p-1 pl-2 pr-3",
+        "hover:bg-gray-200 dark:hover:bg-gray-800",
         selected &&
-          'bg-gray-200 dark:bg-gray-800 text-black dark: text-grey-200'
+          "bg-gray-200 dark:bg-gray-800 text-black dark: text-grey-200"
       )}
       {...props}
     >
@@ -155,7 +155,7 @@ const SidebarItem = React.forwardRef<
   )
 })
 
-SidebarItem.displayName = 'SidebarItem'
+SidebarItem.displayName = "SidebarItem"
 
 const CodeView = React.forwardRef<
   HTMLPreElement,
@@ -164,13 +164,13 @@ const CodeView = React.forwardRef<
   <pre
     ref={ref}
     className={cn(
-      'text-xs bg-gray-100 dark:bg-gray-800 rounded-md p-2',
+      "text-xs bg-gray-100 dark:bg-gray-800 rounded-md p-2",
       className
     )}
     {...props}
   />
 ))
-CodeView.displayName = 'CodeView'
+CodeView.displayName = "CodeView"
 
 function Schema({ schema }: { schema: Schema }) {
   return (

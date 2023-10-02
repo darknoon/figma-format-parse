@@ -1,19 +1,19 @@
-'use client'
+"use client"
 
-import { Input } from '@/components/ui/input'
-import { DragEvent, ClipboardEvent, useState, useEffect, useRef } from 'react'
+import { Input } from "@/components/ui/input"
+import { DragEvent, ClipboardEvent, useState, useEffect, useRef } from "react"
 
 import {
   readHTMLMessage,
   readFigFile,
   ParsedFigmaHTML,
   ParsedFigmaArchive,
-} from 'fig-kiwi'
-import AsyncOperation, { LoaderState, ProgressUpdate } from './async-operation'
-import { PasteButton } from './paste-button'
-import { Progress } from '@/components/ui/progress'
-import { FigmaFile } from './file-viewer'
-import { cn } from '@/lib/utils'
+} from "fig-kiwi"
+import AsyncOperation, { LoaderState, ProgressUpdate } from "./async-operation"
+import { PasteButton } from "./paste-button"
+import { Progress } from "@/components/ui/progress"
+import { FigmaFile } from "./file-viewer"
+import { cn } from "@/lib/utils"
 
 export default function AcceptInput() {
   const [file, setFile] = useState<File | null>(null)
@@ -25,26 +25,26 @@ export default function AcceptInput() {
   }
 
   function onPaste<E extends ClipboardEvent>(e: E) {
-    console.log('onPaste', e.clipboardData)
+    console.log("onPaste", e.clipboardData)
     e.preventDefault()
 
     // If there's a file being pasted
     if (e.clipboardData.files.length) {
       setFile(e.clipboardData.files[0])
       setPasteContent(null)
-    } else if (e.clipboardData.getData('Text')) {
+    } else if (e.clipboardData.getData("Text")) {
       // If there's text being pasted
-      setPasteContent(e.clipboardData.getData('text/html'))
+      setPasteContent(e.clipboardData.getData("text/html"))
       setFile(null)
     }
   }
 
   async function onPasteButton(items: ClipboardItems) {
-    const item = items.find((item) => item.types.includes('text/html'))
+    const item = items.find((item) => item.types.includes("text/html"))
     if (!item) {
       return
     }
-    const blob = await item.getType('text/html')
+    const blob = await item.getType("text/html")
     // Convert blob to string
     const html = await blob.text()
     setPasteContent(html)
@@ -64,10 +64,10 @@ export default function AcceptInput() {
         <AsyncOperation input={file} operation={parseFile}>
           {(state: LoaderState<ParsedFigmaArchive>) => (
             <>
-              {state.status == 'loading' && (
+              {state.status == "loading" && (
                 <Loading up={state} className="max-w-sm" />
               )}
-              {state.status === 'done' && <FigmaFile data={state.data} />}
+              {state.status === "done" && <FigmaFile data={state.data} />}
             </>
           )}
         </AsyncOperation>
@@ -76,10 +76,10 @@ export default function AcceptInput() {
         <AsyncOperation input={pasteContent} operation={parseClipboard}>
           {(state: LoaderState<ParsedFigmaHTML>) => (
             <>
-              {state.status == 'loading' && (
+              {state.status == "loading" && (
                 <Loading up={state} className="max-w-sm" />
               )}
-              {state.status === 'done' && <FigmaFile data={state.data} />}
+              {state.status === "done" && <FigmaFile data={state.data} />}
             </>
           )}
         </AsyncOperation>
@@ -114,18 +114,18 @@ async function* parseFile(
   file: File
 ): AsyncGenerator<ProgressUpdate, ParsedFigmaArchive> {
   yield {
-    message: 'Reading file into array buffer',
+    message: "Reading file into array buffer",
     progress: { current: 0, total: 3 },
   }
   await smallDelay()
   const ab = await file.arrayBuffer()
-  yield { message: 'Creating byte array', progress: { current: 1, total: 3 } }
+  yield { message: "Creating byte array", progress: { current: 1, total: 3 } }
   await smallDelay()
   const bytes = new Uint8Array(ab)
-  yield { message: 'Parsing figma file', progress: { current: 2, total: 3 } }
+  yield { message: "Parsing figma file", progress: { current: 2, total: 3 } }
   await smallDelay()
   const result = readFigFile(bytes)
-  yield { message: 'Done', progress: { current: 3, total: 3 } }
+  yield { message: "Done", progress: { current: 3, total: 3 } }
   await smallDelay()
   return result
 }
@@ -133,10 +133,10 @@ async function* parseFile(
 async function* parseClipboard(
   html: string
 ): AsyncGenerator<ProgressUpdate, ParsedFigmaHTML> {
-  yield { message: 'Reading HTML' }
+  yield { message: "Reading HTML" }
   await smallDelay()
   const result = readHTMLMessage(html)
-  yield { message: 'Done' }
+  yield { message: "Done" }
   await smallDelay()
   return result
 }
@@ -151,7 +151,7 @@ function Loading({
   if (up.progress) {
     const value = (up.progress.current / up.progress.total) * 100
     return (
-      <div className={cn('w-full max-w-sm', className)}>
+      <div className={cn("w-full max-w-sm", className)}>
         {up.message}
         <Progress value={value} />
       </div>
