@@ -24,6 +24,7 @@ type NavSelection =
   | { type: "layer"; guid: GUID }
   | { type: "meta" }
   | { type: "misc" }
+  | { type: "blobs" }
   | { type: "schema" }
 
 export function FigmaFile({ data }: { data: FileContents }) {
@@ -31,13 +32,24 @@ export function FigmaFile({ data }: { data: FileContents }) {
     type: "meta",
   })
   const node =
-    navSelection.type == "layer" && selectedNode(data.message, navSelection)
+    navSelection.type === "layer" && selectedNode(data.message, navSelection)
   const { message } = data
-  const { nodeChanges = [], ...rest } = message
+  const {
+    nodeChanges = [],
+    isCut,
+    pasteID,
+    pasteFileKey,
+    pasteBranchSourceFileKey,
+    pasteIsPartiallyOutsideEnclosingFrame,
+    pastePageId,
+    pasteEditorType,
+    blobs,
+    ...rest
+  } = message
   const type = "meta" in data ? "paste" : "file"
   return (
-    <div className="flex flex-row h-full min-h-screen">
-      <ScrollArea className="max-w-sm h-full min-h-screen border-r-gray-200 border-r p-2">
+    <div className="flex flex-row h-full min-h-screen max-h-screen">
+      <ScrollArea className="max-w-sm min-h-screen border-r-gray-200 border-r">
         <Sidebar
           type={type}
           message={data.message}
@@ -45,16 +57,38 @@ export function FigmaFile({ data }: { data: FileContents }) {
           setNavSelection={setNavSelection}
         />
       </ScrollArea>
-      <ScrollArea className="flex-1 h-full p-8">
-        {navSelection.type == "meta" && "meta" in data && (
-          <FigmaPasteInfo meta={data.meta} more={pick(message)} />
-        )}
-        {navSelection.type == "misc" && (
-          <CodeView>{JSON.stringify(rest, null, 2)}</CodeView>
-        )}
-        {navSelection.type == "schema" && <Schema schema={data.schema} />}
-        {node && <Content node={node} />}
-      </ScrollArea>
+      <div className="flex-1 ">
+        <ScrollArea className="h-full">
+          <div className="p-8">
+            {navSelection.type === "meta" && "meta" in data && (
+              <FigmaPasteInfo
+                meta={data.meta}
+                more={{
+                  pasteEditorType,
+                  pasteID,
+                  pastePageId,
+                  pasteFileKey,
+                  pasteBranchSourceFileKey,
+                  pasteIsPartiallyOutsideEnclosingFrame,
+                  isCut,
+                }}
+              />
+            )}
+            {navSelection.type === "misc" && (
+              <CodeView>{JSON.stringify(rest, null, 2)}</CodeView>
+            )}
+            {navSelection.type === "schema" && <Schema schema={data.schema} />}
+            {navSelection.type === "blobs" && blobs && (
+              <ol>
+                {blobs.map((b, i) => (
+                  <li key={i}>Blob({b.bytes.length} bytes)</li>
+                ))}
+              </ol>
+            )}
+            {node && <Content node={node} />}
+          </div>
+        </ScrollArea>
+      </div>
     </div>
   )
 }
@@ -62,25 +96,13 @@ export function FigmaFile({ data }: { data: FileContents }) {
 type PasteMore = Pick<
   Message,
   | "pasteID"
+  | "isCut"
+  | "pastePageId"
+  | "pasteEditorType"
   | "pasteFileKey"
   | "pasteBranchSourceFileKey"
   | "pasteIsPartiallyOutsideEnclosingFrame"
 >
-
-export function pick(message: Message): PasteMore {
-  const {
-    pasteID,
-    pasteFileKey,
-    pasteBranchSourceFileKey,
-    pasteIsPartiallyOutsideEnclosingFrame,
-  } = message
-  return {
-    pasteID,
-    pasteFileKey,
-    pasteBranchSourceFileKey,
-    pasteIsPartiallyOutsideEnclosingFrame,
-  }
-}
 
 function FigmaPasteInfo({ meta, more }: { meta: FigmaMeta; more: PasteMore }) {
   return (
@@ -142,52 +164,64 @@ function Sidebar({
 }) {
   const { nodeChanges = [] } = message
   return (
-    <div className="min-h-screen">
-      <h2>Metadata</h2>
-      <ul>
-        {type === "paste" && (
-          <SidebarItem
-            onClick={() => setNavSelection({ type: "meta" })}
-            selected={navSelection.type === "meta"}
-          >
-            Paste Info
-          </SidebarItem>
-        )}
-        <SidebarItem
-          onClick={() => setNavSelection({ type: "schema" })}
-          selected={navSelection.type === "schema"}
-        >
-          Schema
-        </SidebarItem>
-        <SidebarItem
-          onClick={() => setNavSelection({ type: "misc" })}
-          selected={navSelection.type === "misc"}
-        >
-          Misc
-        </SidebarItem>
-      </ul>
-      <h2>Nodes</h2>
-      <ol className="flex flex-col space-y-1">
-        {nodeChanges.map((n) => {
-          if (!n.guid) return null
-          const { guid, name, type } = n
-          return (
+    <div className="p-2 h-full flex flex-col space-y-8">
+      <div>
+        <h2>Metadata</h2>
+        <ul className="flex flex-col space-y-1">
+          {type === "paste" && (
             <SidebarItem
-              key={formatGUID(guid)}
-              selected={
-                navSelection.type === "layer" &&
-                formatGUID(navSelection.guid) === formatGUID(guid)
-              }
-              onClick={() => setNavSelection({ type: "layer", guid })}
-              className="flex flex-row space-x-2"
+              onClick={() => setNavSelection({ type: "meta" })}
+              selected={navSelection.type === "meta"}
             >
-              <TypePill type={type || "?"} />
-              {name || "no name"}
+              Paste Info
             </SidebarItem>
-          )
-        })}
-      </ol>
-      <h2>Other</h2>
+          )}
+          <SidebarItem
+            onClick={() => setNavSelection({ type: "schema" })}
+            selected={navSelection.type === "schema"}
+          >
+            Schema
+          </SidebarItem>
+          <SidebarItem
+            onClick={() => setNavSelection({ type: "misc" })}
+            selected={navSelection.type === "misc"}
+          >
+            Misc
+          </SidebarItem>
+          <SidebarItem
+            onClick={() => setNavSelection({ type: "blobs" })}
+            selected={navSelection.type === "blobs"}
+          >
+            Blobs
+          </SidebarItem>
+        </ul>
+      </div>
+      <div>
+        <h2>Nodes</h2>
+        <ol className="flex flex-col space-y-1">
+          {nodeChanges.map((n) => {
+            if (!n.guid) return null
+            const { guid, name, type } = n
+            return (
+              <SidebarItem
+                key={formatGUID(guid)}
+                selected={
+                  navSelection.type === "layer" &&
+                  formatGUID(navSelection.guid) === formatGUID(guid)
+                }
+                onClick={() => setNavSelection({ type: "layer", guid })}
+                className="flex flex-row space-x-2"
+              >
+                <TypePill type={type || "?"} />
+                {name || "no name"}
+              </SidebarItem>
+            )
+          })}
+        </ol>
+      </div>
+      <div>
+        <h2>Other</h2>
+      </div>
     </div>
   )
 }

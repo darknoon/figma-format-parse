@@ -84,13 +84,13 @@ export default function AcceptInput() {
           )}
         </AsyncOperation>
       ) : null}
-      <div
-        onDrop={onDrop}
-        onPaste={onPaste}
-        onDragOver={(e) => e.preventDefault()} // Required to make droppable area
-        className="flex min-h-screen flex-col items-center justify-between p-24 w-full"
-      >
-        {!hasContent && (
+      {!hasContent && (
+        <div
+          onDrop={onDrop}
+          onPaste={onPaste}
+          onDragOver={(e) => e.preventDefault()} // Required to make droppable area
+          className="flex min-h-screen flex-col items-center justify-between p-24 w-full"
+        >
           <div className="h-full border-2 border-dashed border-gray-400 rounded-xl align-center gap-4 flex flex-col items-center max-w-sm">
             <div className="p-8">
               <PasteButton onPaste={onPasteButton} />
@@ -100,8 +100,8 @@ export default function AcceptInput() {
               <Input id="file" type="file" onChange={onFileChange} />
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </>
   )
 }
