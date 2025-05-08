@@ -7,13 +7,11 @@
         "pako": "^2.0.4"
     },
     "devDependencies": {
-        "@types/jest": "^28.1.4",
         "@types/pako": "^2.0.0",
         "esbuild": "^0.14.48",
-        "esbuild-jest": "^0.5.0",
-        "jest": "^28.1.2",
         "npm-dts": "^1.3.12",
-        "typescript": "^4"
+        "typescript": "^4",
+        "vitest": "^1.3.1"
     },
     "module": "./src/index.ts",
     "types": "./src/index.ts",
@@ -27,7 +25,7 @@
     },
     "scripts": {
         "build": "node build.js",
-        "test:watch": "jest --watch",
-        "test": "jest"
+        "test:watch": "vitest",
+        "test": "vitest run"
     }
 }

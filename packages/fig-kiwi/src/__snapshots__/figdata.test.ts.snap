@@ -1,14 +1,14 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`able to decode a real websocket message 1`] = `
-Object {
+{
   "ackID": 265,
-  "nodeChanges": Array [
-    Object {
-      "fillPaints": Array [
-        Object {
+  "nodeChanges": [
+    {
+      "fillPaints": [
+        {
           "blendMode": "NORMAL",
-          "color": Object {
+          "color": {
             "a": 1,
             "b": 0,
             "g": 0,
@@ -19,7 +19,7 @@ Object {
           "visible": true,
         },
       ],
-      "guid": Object {
+      "guid": {
         "localID": 5,
         "sessionID": 9,
       },
@@ -31,10 +31,10 @@ Object {
 `;
 
 exports[`compare red and blue 1`] = `
-Object {
+{
   "ackID": 0,
-  "blobs": Array [
-    Object {
+  "blobs": [
+    {
       "bytes": Uint8Array [
         1,
         0,
@@ -149,10 +149,10 @@ Object {
       ],
     },
   ],
-  "nodeChanges": Array [
-    Object {
+  "nodeChanges": [
+    {
       "blendMode": "PASS_THROUGH",
-      "guid": Object {
+      "guid": {
         "localID": 0,
         "sessionID": 0,
       },
@@ -161,7 +161,7 @@ Object {
       "name": "Document",
       "opacity": 1,
       "phase": "CREATED",
-      "transform": Object {
+      "transform": {
         "m00": 1,
         "m01": 0,
         "m02": 0,
@@ -172,8 +172,8 @@ Object {
       "type": "DOCUMENT",
       "visible": true,
     },
-    Object {
-      "backgroundColor": Object {
+    {
+      "backgroundColor": {
         "a": 1,
         "b": 0.9607843160629272,
         "g": 0.9607843160629272,
@@ -182,7 +182,7 @@ Object {
       "backgroundEnabled": true,
       "backgroundOpacity": 1,
       "blendMode": "PASS_THROUGH",
-      "guid": Object {
+      "guid": {
         "localID": 1,
         "sessionID": 0,
       },
@@ -190,15 +190,15 @@ Object {
       "maskIsOutline": false,
       "name": "Page 1",
       "opacity": 1,
-      "parentIndex": Object {
-        "guid": Object {
+      "parentIndex": {
+        "guid": {
           "localID": 0,
           "sessionID": 0,
         },
         "position": "!",
       },
       "phase": "CREATED",
-      "transform": Object {
+      "transform": {
         "m00": 1,
         "m01": 0,
         "m02": 0,
@@ -209,9 +209,9 @@ Object {
       "type": "CANVAS",
       "visible": true,
     },
-    Object {
+    {
       "blendMode": "PASS_THROUGH",
-      "guid": Object {
+      "guid": {
         "localID": 2,
         "sessionID": 0,
       },
@@ -220,15 +220,15 @@ Object {
       "maskIsOutline": false,
       "name": "Internal Only Canvas",
       "opacity": 1,
-      "parentIndex": Object {
-        "guid": Object {
+      "parentIndex": {
+        "guid": {
           "localID": 0,
           "sessionID": 0,
         },
         "position": "~",
       },
       "phase": "CREATED",
-      "transform": Object {
+      "transform": {
         "m00": 1,
         "m01": 0,
         "m02": 0,
@@ -239,8 +239,8 @@ Object {
       "type": "CANVAS",
       "visible": false,
     },
-    Object {
-      "arcData": Object {
+    {
+      "arcData": {
         "endingAngle": 6.2831854820251465,
         "innerRadius": 0,
         "startingAngle": 0,
@@ -248,18 +248,18 @@ Object {
       "blendMode": "PASS_THROUGH",
       "cornerRadius": 0,
       "cornerSmoothing": 0,
-      "dashPattern": Array [],
-      "fillGeometry": Array [
-        Object {
+      "dashPattern": [],
+      "fillGeometry": [
+        {
           "commandsBlob": 0,
           "styleID": 0,
           "windingRule": "NONZERO",
         },
       ],
-      "fillPaints": Array [
-        Object {
+      "fillPaints": [
+        {
           "blendMode": "NORMAL",
-          "color": Object {
+          "color": {
             "a": 1,
             "b": 0.8500000238418579,
             "g": 0.6204999685287476,
@@ -270,7 +270,7 @@ Object {
           "visible": true,
         },
       ],
-      "guid": Object {
+      "guid": {
         "localID": 2,
         "sessionID": 2,
       },
@@ -282,8 +282,8 @@ Object {
       "miterLimit": 4,
       "name": "Ellipse 1",
       "opacity": 1,
-      "parentIndex": Object {
-        "guid": Object {
+      "parentIndex": {
+        "guid": {
           "localID": 1,
           "sessionID": 0,
         },
@@ -291,17 +291,17 @@ Object {
       },
       "phase": "CREATED",
       "proportionsConstrained": true,
-      "size": Object {
+      "size": {
         "x": 145,
         "y": 145,
       },
       "strokeAlign": "INSIDE",
       "strokeCap": "NONE",
-      "strokeGeometry": Array [],
+      "strokeGeometry": [],
       "strokeJoin": "MITER",
-      "strokePaints": Array [],
+      "strokePaints": [],
       "strokeWeight": 1,
-      "transform": Object {
+      "transform": {
         "m00": 1,
         "m01": 0,
         "m02": 0,
