@@ -1,5 +1,3 @@
-"use client"
-
 import { Input } from "@/components/ui/input"
 import { DragEvent, ClipboardEvent, useState, useEffect, useRef } from "react"
 
@@ -45,7 +43,14 @@ export default function AcceptInput() {
     }
     const blob = await item.getType("text/html")
     // Convert blob to string
-    const html = await blob.text()
+    let html = await blob.text()
+    // New chrome bug, we're seeing &lt; and &gt; instead of < and >
+    html = html.replace("&lt;!--(figmeta)", "<!--(figmeta)")
+    html = html.replace("(/figmeta)--&gt;", "(/figmeta)-->")
+    html = html.replace("&lt;!--(figma)", "<!--(figma)")
+    html = html.replace("(/figma)--&gt;", "(/figma)-->")
+
+    console.log("html", html)
     setPasteContent(html)
   }
 

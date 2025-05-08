@@ -1,4 +1,3 @@
-"use client"
 import React, { useEffect, useReducer, useState } from "react"
 
 export type ProgressUpdate = { message?: string; progress?: DefiniteProgress }

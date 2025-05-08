@@ -2,11 +2,12 @@
   "name": "web",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.0.2",
@@ -17,7 +18,6 @@
     "fig-kiwi": "workspace:*",
     "clsx": "^2.0.0",
     "lucide-react": "^0.279.0",
-    "next": "latest",
     "react": "latest",
     "base64-js": "*",
     "react-dom": "latest",
@@ -25,14 +25,16 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
-    "typescript": "latest",
     "@types/react": "latest",
-    "@types/node": "latest",
     "@types/react-dom": "latest",
-    "autoprefixer": "latest",
-    "postcss": "latest",
-    "tailwindcss": "latest",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vitejs/plugin-react": "^4.0.0",
     "eslint": "latest",
-    "eslint-config-next": "latest"
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.0",
+    "tailwindcss": "^4.1.5",
+    "typescript": "latest",
+    "vite": "^5.0.0"
   }
 }

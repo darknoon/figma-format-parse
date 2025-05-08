@@ -1,0 +1,24 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "chrome",
+            "name": "Debug Vite App Chrome 129",
+            "request": "launch",
+            "url": "http://localhost:5173/",
+            "webRoot": "${workspaceFolder}/apps/web/src",
+            "runtimeExecutable": "/Users/andrew/.cache/puppeteer/chrome/mac_arm-129.0.6668.100/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing"
+        },
+        {
+            "type": "chrome",
+            "name": "Debug Vite App Chrome 145",
+            "request": "launch",
+            "url": "http://localhost:5173/",
+            "webRoot": "${workspaceFolder}/apps/web/src",
+            "runtimeExecutable": "/Users/andrew/.cache/puppeteer/chromium/mac_arm-1457746/chrome-mac/Chromium.app/Contents/MacOS/Chromium"
+        }
+    ]
+}

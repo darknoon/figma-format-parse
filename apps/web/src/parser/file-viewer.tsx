@@ -1,10 +1,10 @@
-"use client"
 import * as React from "react"
 import { useMemo } from "react"
 
 import { fromByteArray } from "base64-js"
 
-import { Schema, prettyPrintSchema } from "kiwi-schema"
+import type { Schema } from "kiwi-schema"
+import { prettyPrintSchema } from "kiwi-schema"
 import {
   CompiledSchema,
   FigmaMeta,

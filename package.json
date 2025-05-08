@@ -5,5 +5,9 @@
         "apps/*"
     ],
     "license": "UNLICENSED",
-    "scripts": {}
+    "scripts": {},
+    "devDependencies": {
+        "@tailwindcss/vite": "^4.1.5",
+        "tailwindcss": "^4.1.5"
+    }
 }
