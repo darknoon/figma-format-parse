@@ -1,5 +1,5 @@
 import { Input } from "@/components/ui/input"
-import { DragEvent, ClipboardEvent, useState, useEffect, useRef } from "react"
+import { DragEvent, ClipboardEvent, useState } from "react"
 
 import {
   readHTMLMessage,

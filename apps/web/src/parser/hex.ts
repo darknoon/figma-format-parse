@@ -7,7 +7,7 @@ export function hex(bytes: Uint8Array, pad?: string): string {
   return hex
 }
 
-export function replacerForHex(key: string, value: any) {
+export function replacerForHex(_key: string, value: any) {
   if (value instanceof Uint8Array) {
     if (value.length === 20) return `sha1(${hex(value)})`
     if (value.length === 32) return `sha256(${hex(value)})`

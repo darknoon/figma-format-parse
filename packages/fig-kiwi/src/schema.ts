@@ -1,4 +1,4 @@
-import { compileSchema, parseSchema } from "kiwi-schema";
+import { parseSchema } from "kiwi-schema";
 
 const schemaText = `
 package Fig;
