@@ -1,3 +1,5 @@
+export {};
+
 function base64ToBytes(base64: string): Uint8Array {
     const lookup = new Uint8Array(256).map((_, i) => 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'.indexOf(String.fromCharCode(i)));
     const padding = (base64.charAt(base64.length - 1) === '=' ? 1 : 0) + (base64.charAt(base64.length - 2) === '=' ? 1 : 0);

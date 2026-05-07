@@ -1,4 +1,4 @@
-import {toByteArray} from "base64-js"
+import {fromByteArray, toByteArray} from "base64-js"
 
 const metaStart = "<!--(figmeta)";
 const metaEnd = "(/figmeta)-->";
@@ -53,8 +53,8 @@ export function composeHTMLString(data: ParsedFigmaHTML): string {
   const strValue = "";
   // TODO: I think I need to EncodeURIComponent here?
   const metaJ = JSON.stringify(data.meta) + "\n";
-  const metaStr = Buffer.from(metaJ).toString("base64");
-  const figStr = Buffer.from(data.figma).toString("base64");
+  const metaStr = fromByteArray(new TextEncoder().encode(metaJ));
+  const figStr = fromByteArray(data.figma);
 
   return `<meta charset="utf-8" /><span
   data-metadata="<!--(figmeta)${metaStr}(/figmeta)-->"
