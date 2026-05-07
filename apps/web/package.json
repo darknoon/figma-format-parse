@@ -29,12 +29,12 @@
     "@types/react-dom": "latest",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
-    "@vitejs/plugin-react": "^4.7.0",
+    "@vitejs/plugin-react": "^6.0.1",
     "eslint": "^9.26.0",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.26",
     "tailwindcss": "^4.2.4",
     "typescript": "^5.8.3",
-    "vite": "^5.4.21"
+    "vite": "^8.0.11"
   }
 }
