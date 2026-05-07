@@ -8,7 +8,7 @@ const { Generator, ELogLevel } = require("npm-dts");
 
 new Generator(
   {
-    entry: "index.ts",
+    entry: "./src/index.ts",
     output: "dist/index.d.ts",
     logLevel: ELogLevel.warn,
   },
@@ -23,7 +23,7 @@ const external = Object.keys(dependencies ?? {}).concat(
 );
 
 const shared = {
-  entryPoints: ["index.ts"],
+  entryPoints: ["./src/index.ts"],
   external,
   bundle: true,
 };
