@@ -1,34 +1,34 @@
 {
-    "name": "fig-kiwi",
-    "version": "0.0.1",
-    "description": "Reads/writes the figma file format for .fig files or text/html pasteboard data.",
-    "dependencies": {
-        "base64-js": "^1.5.1",
-        "kiwi-schema": "^0.5.0",
-        "fzstd": "^0.1.1",
-        "pako": "^2.0.4"
+  "name": "fig-kiwi",
+  "version": "0.0.1",
+  "description": "Reads/writes the figma file format for .fig files or text/html pasteboard data.",
+  "dependencies": {
+    "base64-js": "^1.5.1",
+    "kiwi-schema": "^0.5.0",
+    "fzstd": "^0.1.1",
+    "pako": "^2.0.4"
+  },
+  "devDependencies": {
+    "@types/pako": "^2.0.0",
+    "esbuild": "^0.28.0",
+    "npm-dts": "^1.3.12",
+    "typescript": "^6.0.3",
+    "vitest": "^1.3.1"
+  },
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts"
     },
-    "devDependencies": {
-        "@types/pako": "^2.0.0",
-        "esbuild": "^0.28.0",
-        "npm-dts": "^1.3.12",
-        "typescript": "^6.0.3",
-        "vitest": "^1.3.1"
-    },
-    "module": "./src/index.ts",
-    "types": "./src/index.ts",
-    "exports": {
-        ".": {
-            "import": "./src/index.ts"
-        },
-        "./schema-defs": {
-            "import": "./src/schema-defs.ts"
-        }
-    },
-    "scripts": {
-        "build": "node build.js",
-        "typecheck": "tsc --noEmit",
-        "test:watch": "vitest",
-        "test": "vitest run"
+    "./schema-defs": {
+      "import": "./src/schema-defs.ts"
     }
+  },
+  "scripts": {
+    "build": "node build.js",
+    "typecheck": "tsc --noEmit",
+    "test:watch": "vitest",
+    "test": "vitest run"
+  }
 }

@@ -1,0 +1,15 @@
+**/build/**
+**/dist/**
+**/node_modules/**
+**/gen/**
+**/__snapshots__/**
+**/.next/**
+
+packages/fig-kiwi/data/**
+packages/fig-kiwi/src/fig-kiwi.ts
+packages/fig-kiwi/src/schema.ts
+packages/fig-kiwi/src/schema-defs.ts
+
+bun.lockb
+*.fig
+*.bin
