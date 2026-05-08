@@ -8,10 +8,23 @@ import {
 } from "kiwi-schema";
 import { Message, Schema as CompiledSchema } from "./schema-defs";
 import { deflateRaw, inflateRaw } from "pako";
+import { decompress as zstdDecompress } from "fzstd";
 // Exports as the parsed default schema
 import defaultSchema from "./schema";
 
 export { type FigmaMeta, type Message, type Header, type CompiledSchema };
+
+const ZSTD_MAGIC = 0xfd2fb528;
+
+function decompress(data: Uint8Array): Uint8Array {
+  if (data.length >= 4) {
+    const magic = new DataView(data.buffer, data.byteOffset, 4).getUint32(0, true);
+    if (magic === ZSTD_MAGIC) {
+      return zstdDecompress(data);
+    }
+  }
+  return inflateRaw(data);
+}
 
 export interface ParsedFigma {
   header: Header;
@@ -33,9 +46,9 @@ export function readHTMLMessage(html: string): ParsedFigmaHTML {
   const { figma, meta } = parseHTMLString(html);
   const { header, files } = FigmaArchiveParser.parseArchive(figma);
   const [schemaCompressed, dataCompressed] = files;
-  const schema = decodeBinarySchema(inflateRaw(schemaCompressed));
+  const schema = decodeBinarySchema(decompress(schemaCompressed));
   const compiledSchema = compileSchema(schema) as CompiledSchema;
-  const message = compiledSchema.decodeMessage(inflateRaw(dataCompressed));
+  const message = compiledSchema.decodeMessage(decompress(dataCompressed));
   return { header, meta, schema, message };
 }
 
@@ -55,9 +68,9 @@ export function writeHTMLMessage(m: {
 export function readFigFile(data: Uint8Array): ParsedFigmaArchive {
   const { header, files } = FigmaArchiveParser.parseArchive(data);
   const [schemaFile, dataFile, preview] = files;
-  const fileSchema = decodeBinarySchema(inflateRaw(schemaFile));
+  const fileSchema = decodeBinarySchema(decompress(schemaFile));
   const compiledSchema = compileSchema(fileSchema) as CompiledSchema;
-  const message = compiledSchema.decodeMessage(inflateRaw(dataFile));
+  const message = compiledSchema.decodeMessage(decompress(dataFile));
   return { message, schema: fileSchema, header, preview };
 }
 

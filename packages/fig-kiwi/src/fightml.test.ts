@@ -295,6 +295,26 @@ test("write html string", () => {
   // expect(html).toMatchSnapshot();
 });
 
+test("parses frame paste with zstd data", () => {
+  const html = readFileSync(__dirname + "/../data/figma-paste.html", {
+    encoding: "utf-8",
+  });
+
+  const { meta, message, schema } = readHTMLMessage(html);
+
+  expect(meta).toEqual({
+    fileKey: "ED3uGX5OmSSVrdIZqxtyxQ",
+    pasteID: 223270453,
+    dataType: "scene",
+    environment: "www.figma.com",
+    selectedNodeData: "76:48|4|0",
+  });
+
+  expect(message.type).toBe("NODE_CHANGES");
+  expect(message.nodeChanges?.length).toBe(5);
+  expect(schema.definitions?.length).toBe(580);
+});
+
 test("failing test case", () => {
   const html = readFileSync(__dirname + "/../data/widget-paste.html", {
     encoding: "utf8",
