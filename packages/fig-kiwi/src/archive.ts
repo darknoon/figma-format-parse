@@ -35,8 +35,7 @@ export default class FigmaArchiveParser {
 
   private readHeader(): Header {
     const preludeData = this.read(FIG_KIWI_PRELUDE.length);
-    // @ts-ignore todo: either downlevel-iteration or a type mismatch here
-    const prelude = String.fromCharCode.apply(String, preludeData);
+    const prelude = new TextDecoder().decode(preludeData);
     const preludes = new Set([FIG_KIWI_PRELUDE, FIGJAM_KIWI_PRELUDE, FIG_BUZZ_PRELUDE, FIG_SLIDE_PRELUDE]);
     if (!preludes.has(prelude)) {
       throw new Error(`Unexpected prelude: "${prelude}"`);
@@ -96,7 +95,7 @@ export class FigmaArchiveWriter {
     offset = enc.encodeInto(FIG_KIWI_PRELUDE, buffer).written!;
     view.setUint32(offset, this.header.version, true);
     offset += 4;
-    for (let file of this.files) {
+    for (const file of this.files) {
       view.setUint32(offset, file.byteLength, true);
       offset += 4;
       buffer.set(file, offset);

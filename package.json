@@ -1,13 +1,25 @@
 {
     "name": "figma-format-parse",
+    "type": "module",
     "workspaces": [
         "packages/*",
         "apps/*"
     ],
     "license": "UNLICENSED",
-    "scripts": {},
+    "scripts": {
+        "typecheck": "bun --filter '*' typecheck",
+        "test": "bun --filter fig-kiwi test",
+        "lint": "eslint .",
+        "check": "bun run typecheck && bun run test && bun run lint"
+    },
     "devDependencies": {
         "@tailwindcss/vite": "^4.1.5",
-        "tailwindcss": "^4.1.5"
+        "@eslint/js": "^9.39.4",
+        "eslint": "^9.39.4",
+        "eslint-plugin-react-hooks": "^5.2.0",
+        "eslint-plugin-react-refresh": "^0.4.26",
+        "globals": "^16.0.0",
+        "tailwindcss": "^4.1.5",
+        "typescript-eslint": "^8.59.2"
     }
 }

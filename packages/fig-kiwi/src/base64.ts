@@ -8,7 +8,7 @@ function base64ToBytes(base64: string): Uint8Array {
     const byteArray = new Uint8Array(numBytes);
   
     for (let i = 0, j = 0; i < numBytes; i += 3, j += 4) {
-        let bits = (lookup[base64.charCodeAt(j)] << 18) |
+        const bits = (lookup[base64.charCodeAt(j)] << 18) |
                    (lookup[base64.charCodeAt(j + 1)] << 12) |
                    (lookup[base64.charCodeAt(j + 2)] << 6) |
                    lookup[base64.charCodeAt(j + 3)];

@@ -108,7 +108,6 @@ export function FigmaFile({ data }: { data: FileContents }) {
                       <p className="text-xs text-gray-700 dark:text-gray-400">
                         {data.preview.length} bytes
                       </p>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         alt=""
                         src={`data:image/png;base64,${fromByteArray(

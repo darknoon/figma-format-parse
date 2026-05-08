@@ -9,7 +9,7 @@ export function PasteButton({
   const [canPaste, setCanPaste] = useState(false)
   useEffect(() => {
     const ok =
-      typeof "navigator" !== "undefined" &&
+      typeof navigator !== "undefined" &&
       !!navigator.clipboard &&
       "read" in navigator.clipboard
     setCanPaste(ok)
