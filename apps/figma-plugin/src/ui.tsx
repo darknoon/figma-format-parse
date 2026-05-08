@@ -18,7 +18,7 @@ import {
   Message,
   Header,
 } from "fig-kiwi";
-import { Buffer } from "buffer";
+import { fromByteArray, toByteArray } from "base64-js";
 
 import { CloseHandler } from "./types";
 import { Schema, prettyPrintSchema } from "kiwi-schema";
@@ -30,14 +30,14 @@ const bytesReplacer = (key: string, value: any): any => {
     key == "bytes"
   ) {
     console.log("replace buffer with length", value.byteLength);
-    return Buffer.from(value).toString("base64");
+    return fromByteArray(value);
   }
   return value;
 };
 
 const bytesReplacerInverse = (key: string, value: any): any => {
   if (key === "bytes" && typeof value === "string") {
-    return Buffer.from(value, "base64");
+    return toByteArray(value);
   }
   return value;
 };

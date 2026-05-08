@@ -1,22 +1,19 @@
 {
   "name": "figma-format-parse-plugin",
   "dependencies": {
-    "@create-figma-plugin/ui": "^2.1.0",
-    "@create-figma-plugin/utilities": "^2.1.0",
-    "buffer": "^6.0.3",
+    "@create-figma-plugin/ui": "^4.0.3",
+    "@create-figma-plugin/utilities": "^4.0.3",
+    "base64-js": "^1.5.1",
     "kiwi-schema": "^0.5.0",
     "pako": "^2.0.4",
     "preact": "^10"
   },
   "devDependencies": {
-    "@create-figma-plugin/build": "^2.1.0",
-    "@create-figma-plugin/tsconfig": "^2.1.0",
-    "@figma/plugin-typings": "1.47.0",
-    "@types/jest": "^28.1.4",
+    "@create-figma-plugin/build": "^4.0.3",
+    "@create-figma-plugin/tsconfig": "^4.0.3",
+    "@figma/plugin-typings": "^1.125.0",
     "@types/pako": "^2.0.0",
     "esbuild": "^0.28.0",
-    "esbuild-jest": "^0.5.0",
-    "jest": "^28.1.2",
     "typescript": "^6.0.3"
   },
   "scripts": {
