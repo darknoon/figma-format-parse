@@ -3,10 +3,10 @@ import { DragEvent, ClipboardEvent, useState } from "react"
 
 import {
   readHTMLMessage,
-  readFigFile,
   ParsedFigmaHTML,
   ParsedFigmaArchive,
 } from "fig-kiwi"
+import { readFigFileBlob } from "fig-kiwi/blob"
 import AsyncOperation, { LoaderState, ProgressUpdate } from "./async-operation"
 import { PasteButton } from "./paste-button"
 import { FigmaFile } from "./file-viewer"
@@ -123,18 +123,14 @@ async function* parseFile(
   file: File
 ): AsyncGenerator<ProgressUpdate, ParsedFigmaArchive> {
   yield {
-    message: "Reading file into array buffer",
-    progress: { current: 0, total: 3 },
+    message: "Reading Figma file",
+    progress: { current: 0, total: 2 },
   }
   await smallDelay()
-  const ab = await file.arrayBuffer()
-  yield { message: "Creating byte array", progress: { current: 1, total: 3 } }
+  yield { message: "Reading document and preview", progress: { current: 1, total: 2 } }
   await smallDelay()
-  const bytes = new Uint8Array(ab)
-  yield { message: "Parsing figma file", progress: { current: 2, total: 3 } }
-  await smallDelay()
-  const result = readFigFile(bytes)
-  yield { message: "Done", progress: { current: 3, total: 3 } }
+  const result = await readFigFileBlob(file)
+  yield { message: "Done", progress: { current: 2, total: 2 } }
   await smallDelay()
   return result
 }

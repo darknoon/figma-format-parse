@@ -9,6 +9,7 @@ import {
 import { Message, Schema as CompiledSchema } from "./schema-defs";
 import { deflateRaw, inflateRaw } from "pako";
 import { decompress as zstdDecompress } from "fzstd";
+import { unzipSync } from "fflate";
 // Exports as the parsed default schema
 import defaultSchema from "./schema";
 
@@ -39,7 +40,14 @@ export interface ParsedFigmaHTML extends ParsedFigma {
 }
 
 export interface ParsedFigmaArchive extends ParsedFigma {
-  preview: Uint8Array;
+  preview?: Uint8Array;
+  /** External image bytes, keyed by their path relative to images/. */
+  images?: Record<string, Uint8Array>;
+}
+
+export interface ReadFigFileOptions {
+  /** Extract external images. Disable when only inspecting the document data. */
+  includeImages?: boolean;
 }
 
 export function readHTMLMessage(html: string): ParsedFigmaHTML {  
@@ -65,13 +73,49 @@ export function writeHTMLMessage(m: {
   });
 }
 
-export function readFigFile(data: Uint8Array): ParsedFigmaArchive {
-  const { header, files } = FigmaArchiveParser.parseArchive(data);
+export function readFigFile(
+  data: Uint8Array,
+  { includeImages = true }: ReadFigFileOptions = {}
+): ParsedFigmaArchive {
+  // Exported .fig files can wrap the Kiwi document and its assets in a ZIP.
+  const signature =
+    data.length >= 4
+      ? new DataView(data.buffer, data.byteOffset, 4).getUint32(0, true)
+      : undefined;
+  const isZip = signature === 0x04034b50 || signature === 0x06054b50;
+  const archive = isZip
+    ? unzipSync(data, {
+        filter: ({ name }) =>
+          name === "canvas.fig" ||
+          name === "thumbnail.png" ||
+          (includeImages && name.startsWith("images/") && !name.endsWith("/")),
+      })
+    : undefined;
+  const canvas = archive ? archive["canvas.fig"] : data;
+  if (!canvas) {
+    throw new Error(
+      "This ZIP does not contain canvas.fig. Select a Figma .fig export."
+    );
+  }
+
+  const { header, files } = FigmaArchiveParser.parseArchive(canvas);
   const [schemaFile, dataFile, preview] = files;
   const fileSchema = decodeBinarySchema(decompress(schemaFile));
   const compiledSchema = compileSchema(fileSchema) as CompiledSchema;
   const message = compiledSchema.decodeMessage(decompress(dataFile));
-  return { message, schema: fileSchema, header, preview };
+  return {
+    message,
+    schema: fileSchema,
+    header,
+    preview: archive?.["thumbnail.png"] ?? preview,
+    ...(archive && includeImages && {
+      images: Object.fromEntries(
+        Object.entries(archive)
+          .filter(([name]) => name.startsWith("images/"))
+          .map(([name, bytes]) => [name.slice("images/".length), bytes])
+      ),
+    }),
+  };
 }
 
 export function writeFigFile(settings: {

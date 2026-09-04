@@ -1,7 +1,9 @@
 {
   "extends": "@create-figma-plugin/tsconfig",
   "compilerOptions": {
-    "typeRoots": ["node_modules/@types"]
+    "moduleResolution": "bundler",
+    "skipLibCheck": true,
+    "types": ["node", "vitest/globals"]
   },
   "include": ["src/**/*.ts"]
 }

@@ -13,7 +13,7 @@ export default class FigmaArchiveParser {
 
   constructor(buffer: Uint8Array) {
     this.buffer = buffer;
-    this.data = new DataView(buffer.buffer);
+    this.data = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
   }
 
   private readUint32(): number {
