@@ -45,7 +45,7 @@ export function ImageBrowser({
   }, [assets])
 
   const visible = assets.filter((asset) =>
-    `${asset.name} ${asset.entry.name} ${asset.thumbnail?.name ?? ""}`
+    `${asset.name} ${asset.key} ${asset.thumbnail?.name ?? ""}`
       .toLowerCase()
       .includes(query.toLowerCase())
   )
@@ -61,19 +61,26 @@ export function ImageBrowser({
       />
       <ul aria-label="Images" className={assetGridClassName}>
         {visible.map((asset) => (
-          <li key={asset.entry.name} className="min-w-0">
+          <li key={asset.key} className="min-w-0">
             <button
               type="button"
               aria-haspopup="dialog"
-              aria-label={`${asset.name}, ${formatSize(asset.entry.size)}`}
-              title={`${asset.name}\n${asset.entry.name}`}
+              aria-label={`${asset.name}, ${asset.entry ? formatSize(asset.entry.size) : "Missing image data"}`}
+              title={`${asset.name}\n${asset.key}`}
               onClick={() => setSelected(asset)}
               className={cn(
                 assetCardClassName,
                 "group flex h-full w-full cursor-pointer flex-col gap-2 text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
               )}
             >
-              <span className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-md bg-muted/40 transition-opacity group-hover:opacity-85">
+              <span
+                className={cn(
+                  "flex aspect-square w-full items-center justify-center overflow-hidden rounded-md bg-muted/40 transition-opacity group-hover:opacity-85",
+                  !asset.entry &&
+                    !asset.thumbnail &&
+                    "bg-gray-200 dark:bg-gray-800"
+                )}
+              >
                 {asset.thumbnail && thumbnails.get(asset.thumbnail.name) ? (
                   <img
                     src={thumbnails.get(asset.thumbnail.name)!}
@@ -85,7 +92,7 @@ export function ImageBrowser({
                       )
                     }
                   />
-                ) : (
+                ) : !asset.entry && !asset.thumbnail ? null : (
                   <span className="p-3 text-sm text-muted-foreground">
                     {!asset.thumbnail
                       ? "No embedded thumbnail"
@@ -100,7 +107,9 @@ export function ImageBrowser({
                   {asset.name}
                 </span>
                 <span className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
-                  <span>{formatSize(asset.entry.size)}</span>
+                  <span>
+                    {asset.entry ? formatSize(asset.entry.size) : "Missing"}
+                  </span>
                   {asset.isPreview ? (
                     <span>Preview</span>
                   ) : (
@@ -147,11 +156,25 @@ export function ImageBrowser({
             ) : undefined
           }
         >
-          <SelectedImage
-            key={selected.entry.name}
-            entry={selected.entry}
-            alt={selected.name}
-          />
+          {selected.entry || selected.thumbnail ? (
+            <SelectedImage
+              key={selected.key}
+              entry={(selected.entry ?? selected.thumbnail)!}
+              alt={selected.name}
+            />
+          ) : (
+            <div
+              role="img"
+              aria-label={`${selected.name}: missing image data`}
+              title={selected.key}
+              className="flex aspect-square w-[min(48rem,calc(100vw-4rem),calc(100dvh-9rem))] flex-col items-center justify-center gap-2 rounded-lg bg-gray-200 p-6 text-center text-sm text-muted-foreground dark:bg-gray-800"
+            >
+              <span>Missing image</span>
+              <span className="max-w-full break-all font-mono">
+                {selected.key}
+              </span>
+            </div>
+          )}
         </ImageLightbox>
       )}
     </section>

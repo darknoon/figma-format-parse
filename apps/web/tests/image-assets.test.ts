@@ -1,7 +1,11 @@
 import { expect, test } from "bun:test"
 import type { Message } from "fig-kiwi"
 import type { FigmaImageEntry } from "fig-kiwi/blob"
-import { imageAssets, readThumbnails } from "../src/parser/image-assets"
+import {
+  hasImageReferences,
+  imageAssets,
+  readThumbnails,
+} from "../src/parser/image-assets"
 
 const hash = (id: number) => new Uint8Array(20).fill(id)
 const name = (id: number) => id.toString(16).padStart(2, "0").repeat(20)
@@ -37,7 +41,7 @@ test("places the file preview before embedded images and opens the same PNG", as
   expect(assets[0].isPreview).toBe(true)
   expect(assets[0].references).toBeUndefined()
   expect(assets[0].thumbnail).toBe(assets[0].entry)
-  const blob = await assets[0].entry.read()
+  const blob = await assets[0].entry!.read()
   expect(blob.type).toBe("image/png")
   expect(new Uint8Array(await blob.arrayBuffer())).toEqual(preview)
 })
@@ -52,6 +56,7 @@ test("pairs by hash, displaying one card whose click target is the original", ()
   const thumbnail = entry(2)
   expect(imageAssets([thumbnail, original], message(1, 2))).toEqual([
     {
+      key: original.name,
       entry: original,
       name: "Image name",
       thumbnail,
@@ -85,7 +90,7 @@ test("keeps additional thumbnail variants accessible", () => {
     nodeChanges: [...message(1, 2).nodeChanges!, ...message(1, 3).nodeChanges!],
   })
   expect(
-    assets.map(({ entry, thumbnail }) => [entry.name, thumbnail?.name])
+    assets.map(({ entry, thumbnail }) => [entry!.name, thumbnail?.name])
   ).toEqual([
     [name(1), name(2)],
     [name(3), name(3)],
@@ -138,12 +143,13 @@ test("a failed thumbnail never falls back to loading the original", async () => 
   expect(errors).toEqual([name(2)])
 })
 
-test("retains standalone thumbnails but does not auto-load an original that references itself", () => {
+test("uses an available thumbnail for a missing original without claiming the original exists", () => {
   const thumbnail = entry(2)
   expect(imageAssets([thumbnail], message(1, 2))).toEqual([
     {
-      entry: thumbnail,
-      name: "Layer name",
+      key: name(1),
+      entry: undefined,
+      name: "Image name",
       thumbnail,
       references: [{ nodeIndex: 0, name: "Layer name", guid: undefined }],
     },
@@ -159,7 +165,12 @@ test("limits concurrent reads and abandons queued thumbnails when the view close
       expect(signal).toBe(controller.signal)
       return new Promise<Blob>((resolve) => pending.push(resolve))
     })
-    return { entry: thumbnail, thumbnail, name: thumbnail.name }
+    return {
+      key: thumbnail.name,
+      entry: thumbnail,
+      thumbnail,
+      name: thumbnail.name,
+    }
   })
   let loaded = 0
   const reading = readThumbnails(
@@ -197,4 +208,55 @@ test("counts referencing nodes once across fills, strokes, and thumbnail aliases
   expect(referenced[0].references).toEqual([
     { nodeIndex: 0, guid: { sessionID: 3, localID: 4 }, name: "Picture" },
   ])
+})
+
+test("retains missing image identifiers and deduplicates uses across fills and strokes", () => {
+  const paints = message(1, 1).nodeChanges![0].fillPaints
+  const data: Message = {
+    nodeChanges: [
+      {
+        guid: { sessionID: 1, localID: 10 },
+        name: "Hero",
+        fillPaints: paints,
+        strokePaints: paints,
+      },
+      {
+        guid: { sessionID: 1, localID: 20 },
+        name: "Mobile hero",
+        fillPaints: paints,
+      },
+    ],
+  }
+  const assets = imageAssets([], data)
+  expect(hasImageReferences(data)).toBe(true)
+  expect(assets).toHaveLength(1)
+  expect(assets[0].key).toBe(name(1))
+  expect(assets[0].entry).toBeUndefined()
+  expect(assets[0].references?.map((ref) => ref.guid?.localID)).toEqual([
+    10, 20,
+  ])
+  expect(
+    hasImageReferences({ nodeChanges: [{ fillPaints: [{ type: "SOLID" }] }] })
+  ).toBe(false)
+})
+
+test("resolves inline image bytes while retaining a missing dataBlob reference", async () => {
+  const data: Message = {
+    blobs: [{ bytes: new Uint8Array([137, 80, 78, 71]) }],
+    nodeChanges: [
+      {
+        fillPaints: [
+          { image: { dataBlob: 0, hash: hash(1) } },
+          { image: { dataBlob: 7 } },
+        ],
+      },
+    ],
+  }
+  const assets = imageAssets([], data)
+  expect(assets.map((asset) => asset.key)).toEqual(["blob:0", "blob:7"])
+  expect(assets[1].entry).toBeUndefined()
+  const blob = await assets[0].entry!.read()
+  expect(new Uint8Array(await blob.arrayBuffer())).toEqual(
+    data.blobs![0].bytes!
+  )
 })

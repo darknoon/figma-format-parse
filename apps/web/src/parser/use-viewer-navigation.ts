@@ -3,6 +3,8 @@ import type { ParsedFigmaHTML } from "fig-kiwi"
 import type { ParsedFigmaBlob } from "fig-kiwi/blob"
 import type { GUID } from "fig-kiwi/schema-defs"
 
+import { hasImageReferences } from "./image-assets"
+
 type FileContents = ParsedFigmaBlob | ParsedFigmaHTML
 
 export type NavSelection =
@@ -58,7 +60,8 @@ function readSelection(hash: string, data: FileContents): NavSelection {
     case "images":
       if (
         ("preview" in data && data.preview?.length) ||
-        ("imageEntries" in data && data.imageEntries?.length)
+        ("imageEntries" in data && data.imageEntries?.length) ||
+        hasImageReferences(data.message)
       )
         return { type: "images" }
       break

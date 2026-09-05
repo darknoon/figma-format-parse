@@ -111,6 +111,7 @@ export function FigmaFile({ data }: { data: FileContents }) {
           focusRequest={focusRequest}
           onSelect={setSceneSelection}
           onHover={setSceneHover}
+          onOpenImages={() => setNavSelection({ type: "images" })}
         />
       ) : (
         <div ref={content} className="h-full overflow-y-auto">

@@ -34,6 +34,7 @@ export interface FigmaRendererProps {
   onSelect?: (guid?: GUID) => void
   /** Reports the layer under the pointer independently of selection. */
   onHover?: (guid?: GUID) => void
+  onOpenImages?: () => void
 }
 
 export function FigmaRenderer({
@@ -43,6 +44,7 @@ export function FigmaRenderer({
   focusRequest = 0,
   onSelect,
   onHover,
+  onOpenImages,
 }: FigmaRendererProps) {
   const scene = useMemo(() => buildScene(message), [message])
   const [pageId, setPageId] = useState(
@@ -247,7 +249,17 @@ export function FigmaRenderer({
       )}
       {pending === 0 && failed > 0 && (
         <span role="status" className="fig-renderer__status">
-          {failed} unavailable images
+          {onOpenImages ? (
+            <button
+              type="button"
+              onClick={onOpenImages}
+              className="cursor-pointer rounded-sm hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
+            >
+              {failed} unavailable images
+            </button>
+          ) : (
+            `${failed} unavailable images`
+          )}
         </span>
       )}
       <div

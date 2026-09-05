@@ -1,5 +1,5 @@
 import type { Message } from "fig-kiwi"
-import type { GUID } from "fig-kiwi/schema-defs"
+import type { GUID, Image } from "fig-kiwi/schema-defs"
 import type { FigmaImageEntry } from "fig-kiwi/blob"
 import { hex } from "./hex"
 
@@ -10,11 +10,28 @@ export interface ImageReference {
 }
 
 export interface ImageAsset {
-  entry: FigmaImageEntry
+  key: string
+  entry?: FigmaImageEntry
   name: string
   references?: ImageReference[]
   thumbnail?: FigmaImageEntry
   isPreview?: boolean
+}
+
+function imageId(image?: Image) {
+  return image?.dataBlob !== undefined
+    ? `blob:${image.dataBlob}`
+    : image?.hash && hex(image.hash)
+}
+
+export function hasImageReferences(message: Message) {
+  return (
+    message.nodeChanges?.some((node) =>
+      [...(node.fillPaints ?? []), ...(node.strokePaints ?? [])].some((paint) =>
+        [paint.image, paint.animatedImage, paint.imageThumbnail].some(imageId)
+      )
+    ) ?? false
+  )
 }
 
 /** Pair assets using Figma's image hashes, without reading any image bytes. */
@@ -40,28 +57,35 @@ export function imageAssets(
         paint.animatedImage,
         paint.imageThumbnail,
       ]) {
-        if (image?.hash) {
-          const id = hex(image.hash)
+        const id = imageId(image)
+        if (image && id) {
+          if (!byName.has(id) && image.dataBlob !== undefined) {
+            const bytes = message.blobs?.[image.dataBlob]?.bytes
+            if (bytes)
+              byName.set(id, {
+                name: id,
+                size: bytes.length,
+                compressedSize: bytes.length,
+                read: async (signal) => {
+                  signal?.throwIfAborted()
+                  return new Blob([new Uint8Array(bytes)])
+                },
+              })
+          }
           const nodes = uses.get(id) ?? new Map<number, ImageReference>()
           nodes.set(nodeIndex, { nodeIndex, guid: node.guid, name: node.name })
           uses.set(id, nodes)
         }
-        if (
-          image?.hash &&
-          (image.name || node.name) &&
-          !names.has(hex(image.hash))
-        ) {
-          names.set(hex(image.hash), image.name || node.name!)
+        if (image && id && (image.name || node.name) && !names.has(id)) {
+          names.set(id, image.name || node.name!)
         }
       }
-      const thumbnailId =
-        paint.imageThumbnail?.hash && hex(paint.imageThumbnail.hash)
+      const thumbnailId = imageId(paint.imageThumbnail)
       const thumbnail = thumbnailId && byName.get(thumbnailId)
       if (thumbnail) thumbnails.add(thumbnail.name)
       for (const image of [paint.image, paint.animatedImage]) {
-        if (!image?.hash) continue
-        const id = hex(image.hash)
-        if (!byName.has(id)) continue
+        const id = imageId(image)
+        if (!id) continue
         originals.add(id)
         if (thumbnail && thumbnail.name !== id && !previewFor.has(id)) {
           previewFor.set(id, thumbnail)
@@ -70,18 +94,17 @@ export function imageAssets(
       }
     }
   }
-  const assets: ImageAsset[] = entries
-    .filter(
-      (entry) => !pairedThumbnails.has(entry.name) || originals.has(entry.name)
-    )
-    .map((entry) => ({
-      entry,
-      references: [...(uses.get(entry.name)?.values() ?? [])],
-      name: names.get(entry.name) ?? entry.name,
+  const assets: ImageAsset[] = [...new Set([...byName.keys(), ...uses.keys()])]
+    .filter((key) => !pairedThumbnails.has(key) || originals.has(key))
+    .map((key) => ({
+      key,
+      entry: byName.get(key),
+      references: [...(uses.get(key)?.values() ?? [])],
+      name: names.get(key) ?? key,
       thumbnail:
-        previewFor.get(entry.name) ??
-        (thumbnails.has(entry.name) && !originals.has(entry.name)
-          ? entry
+        previewFor.get(key) ??
+        (thumbnails.has(key) && !originals.has(key)
+          ? byName.get(key)
           : undefined),
     }))
   if (preview?.length) {
@@ -96,6 +119,7 @@ export function imageAssets(
       },
     }
     assets.unshift({
+      key: entry.name,
       entry,
       thumbnail: entry,
       name: "File preview",
