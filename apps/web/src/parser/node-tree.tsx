@@ -1,7 +1,7 @@
 import { useLayoutEffect, useMemo, useRef, useState } from "react"
 import type { GUID, NodeChange } from "fig-kiwi/schema-defs"
 import { cn } from "@/lib/utils"
-import { TypePill } from "./type-pill"
+import { NodeTypeIcon } from "./node-type-icon"
 import {
   buildNodeTree,
   nodeId,
@@ -175,7 +175,7 @@ export function NodeTree({
               <span className="mr-1 w-5 shrink-0" />
             )}
             <span className="shrink-0">
-              <TypePill type={item.node.type || "?"} />
+              <NodeTypeIcon type={item.node.type || "?"} />
             </span>
             <span className="min-w-0 flex-1 truncate" title={name}>
               {name}
