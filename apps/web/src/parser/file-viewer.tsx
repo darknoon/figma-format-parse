@@ -20,6 +20,7 @@ import { GUID, NodeChange } from "fig-kiwi/schema-defs"
 import { cn } from "@/lib/utils"
 import { NodeTree } from "./node-tree"
 import { CodeView } from "./code-view"
+import { jsonFieldRange } from "./json-field-range"
 import { replacerForHex } from "./hex"
 import { HexView } from "./hex-view"
 import { Button } from "@/components/ui/button"
@@ -510,6 +511,23 @@ function NodeContent({
 
   const { name, type, guid, parentIndex, phase, ...properties } = node
   const decoded = JSON.stringify(properties, replacerForHex, 2)
+  const referenceMark = useRef<HTMLElement>(null)
+  const nodeHeader = useRef<HTMLDivElement>(null)
+  const referenceRange = useMemo(
+    () =>
+      blobReference ? jsonFieldRange(decoded, blobReference.path) : undefined,
+    [decoded, blobReference]
+  )
+  useLayoutEffect(() => {
+    if (!referenceRange) return
+    const frame = requestAnimationFrame(() => {
+      const mark = referenceMark.current
+      if (!mark) return
+      mark.style.scrollMarginTop = `${(nodeHeader.current?.getBoundingClientRect().height ?? 0) + 24}px`
+      mark.scrollIntoView({ block: "start" })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [referenceRange])
   const summary = [
     { label: "Type", value: type ?? "—" },
     { label: "GUID", value: guid ? formatGUID(guid) : "—" },
@@ -548,7 +566,10 @@ function NodeContent({
   ]
   return (
     <Card>
-      <CardHeader className="sticky top-0 z-10 rounded-t-lg border-b bg-card">
+      <CardHeader
+        ref={nodeHeader}
+        className="sticky top-0 z-10 rounded-t-lg border-b bg-card"
+      >
         <h2 className="break-words text-lg tracking-tight">
           {name || "no name"}
         </h2>
@@ -566,7 +587,7 @@ function NodeContent({
             </dd>
           </div>
         </dl>
-        {blobReference && (
+        {blobReference && !referenceRange && (
           <p className="text-sm text-muted-foreground">
             Blob {blobReference.index} is referenced at{" "}
             <code className="break-all">{blobReference.path}</code>.
@@ -576,7 +597,23 @@ function NodeContent({
       </CardHeader>
       <CardContent className="pt-6">
         <h3>Other fields as JSON ({decoded.length} characters)</h3>
-        <CodeView>{decoded}</CodeView>
+        <CodeView>
+          {referenceRange ? (
+            <>
+              {decoded.slice(0, referenceRange.start)}
+              <mark
+                ref={referenceMark}
+                title={blobReference?.path}
+                className="rounded-sm bg-blue-100 text-blue-950 outline-2 outline-blue-400"
+              >
+                {decoded.slice(referenceRange.start, referenceRange.end)}
+              </mark>
+              {decoded.slice(referenceRange.end)}
+            </>
+          ) : (
+            decoded
+          )}
+        </CodeView>
         {data && (
           <>
             <h3>As kiwi ({data.length} bytes)</h3>
