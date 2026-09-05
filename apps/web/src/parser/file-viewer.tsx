@@ -21,6 +21,7 @@ import { CodeView } from "./code-view"
 import { jsonFieldRange } from "./json-field-range"
 import { replacerForHex } from "./hex"
 import { HexView } from "./hex-view"
+import { kiwiRanges } from "./kiwi-ranges"
 import { compileSchema } from "kiwi-schema"
 import { ImageBrowser } from "./image-browser"
 import { imageAssets } from "./image-assets"
@@ -488,6 +489,11 @@ function NodeContent({
     return compiledSchema.encodeNodeChange(node)
   }, [node, compiledSchema])
 
+  const ranges = useMemo(
+    () => data ? kiwiRanges(schema, "NodeChange", node, data) : [],
+    [schema, node, data]
+  )
+
   const { name, type, guid, parentIndex, phase, ...properties } = node
   const decoded = JSON.stringify(properties, replacerForHex, 2)
   const referenceMark = useRef<HTMLElement>(null)
@@ -599,7 +605,7 @@ function NodeContent({
         {data && (
           <>
             <h3>As kiwi ({data.length} bytes)</h3>
-            <HexView bytes={data} />
+            <HexView bytes={data} ranges={ranges} />
           </>
         )}
       </CardContent>

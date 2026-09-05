@@ -87,8 +87,8 @@ export function HexView({
           className="pointer-events-none fixed z-50 w-80 rounded-md border bg-popover p-3 text-sm text-popover-foreground shadow-md"
           style={{ left: hover.x, top: hover.y }}
         >
-          <div className="font-medium">{hover.range.label}</div>
-          <div className="mt-1">{hover.range.description}</div>
+          <div className="break-words font-medium">{hover.range.label}</div>
+          <div className="mt-1 max-h-40 overflow-hidden break-words">{hover.range.description}</div>
           <div className="mt-1 text-muted-foreground">
             0x{hover.range.offset.toString(16)} · {hover.range.byteLength} bytes
           </div>
