@@ -321,16 +321,18 @@ function GeometryPreview({
                         : ""
                       : path
                   }
-                  fill="#dbeafe"
-                  fillRule={network ? "evenodd" : "nonzero"}
+                  fill="#93c5fd"
+                  fillRule={glyph ? "nonzero" : "evenodd"}
                 />
-                <path
-                  d={network?.stroke ?? path}
-                  fill="none"
-                  stroke="#2563eb"
-                  strokeWidth={1}
-                  vectorEffect="non-scaling-stroke"
-                />
+                {network && !network.regions.length && (
+                  <path
+                    d={network.stroke}
+                    fill="none"
+                    stroke="#2563eb"
+                    strokeWidth={1}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                )}
                 {network &&
                   !network.stroke &&
                   network.vertices.map((v, i) => (
