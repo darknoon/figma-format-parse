@@ -34,7 +34,7 @@ export async function readFigFileBlob(file: Blob): Promise<ParsedFigmaBlob> {
     const canvas = entries.find((entry) => entry.filename === "canvas.fig")
     if (!canvas || canvas.directory) {
       throw new Error(
-        "This ZIP does not contain canvas.fig. Select a Figma .fig export."
+        "This ZIP does not contain canvas.fig. Select a Figma .fig or .site export."
       )
     }
 

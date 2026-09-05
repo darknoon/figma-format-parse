@@ -2,6 +2,7 @@ export type Header = { prelude: string; version: number };
 
 const FIG_KIWI_PRELUDE = "fig-kiwi";
 const FIGJAM_KIWI_PRELUDE = "fig-jam.";
+const FIG_SITE_PRELUDE = "fig-site";
 const FIG_BUZZ_PRELUDE = "fig-buzz";
 const FIG_SLIDE_PRELUDE = ".flides";
 const FIG_KIWI_VERSION = 15;
@@ -36,7 +37,7 @@ export default class FigmaArchiveParser {
   private readHeader(): Header {
     const preludeData = this.read(FIG_KIWI_PRELUDE.length);
     const prelude = new TextDecoder().decode(preludeData);
-    const preludes = new Set([FIG_KIWI_PRELUDE, FIGJAM_KIWI_PRELUDE, FIG_BUZZ_PRELUDE, FIG_SLIDE_PRELUDE]);
+    const preludes = new Set([FIG_KIWI_PRELUDE, FIGJAM_KIWI_PRELUDE, FIG_BUZZ_PRELUDE, FIG_SLIDE_PRELUDE, FIG_SITE_PRELUDE]);
     if (!preludes.has(prelude)) {
       throw new Error(`Unexpected prelude: "${prelude}"`);
     }

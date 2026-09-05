@@ -106,3 +106,16 @@ test("rejects a truncated ZIP Blob", async () => {
     readFigFileBlob(new Blob([zip.subarray(0, zip.length - 30)]))
   ).rejects.toThrow()
 })
+
+// Sites exports use the same archive structure with a distinct eight-byte prelude.
+test.each([false, true])("reads a Sites file (ZIP: %s)", async (zipped) => {
+  const siteCanvas = canvas.slice()
+  siteCanvas.set(new TextEncoder().encode("fig-site"))
+  const data = zipped ? zipSync({ "canvas.fig": siteCanvas }) : siteCanvas
+  const { imageEntries, ...parsed } = await readFigFileBlob(new Blob([data]))
+  expect(parsed).toEqual({ ...expected, header: { ...expected.header, prelude: "fig-site" } })
+  expect(imageEntries).toEqual(zipped ? [] : undefined)
+  const { images, ...synchronous } = readFigFile(data)
+  expect(synchronous).toEqual(parsed)
+  expect(images).toEqual(zipped ? {} : undefined)
+})

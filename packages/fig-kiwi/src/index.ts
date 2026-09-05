@@ -94,7 +94,7 @@ export function readFigFile(
   const canvas = archive ? archive["canvas.fig"] : data;
   if (!canvas) {
     throw new Error(
-      "This ZIP does not contain canvas.fig. Select a Figma .fig export."
+      "This ZIP does not contain canvas.fig. Select a Figma .fig or .site export."
     );
   }
 
