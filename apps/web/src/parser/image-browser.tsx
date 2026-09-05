@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react"
 import type { FigmaImageEntry } from "fig-kiwi/blob"
-import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ImageLightbox } from "./image-lightbox"
 import { readThumbnails, type ImageAsset } from "./image-assets"
+import { cn } from "@/lib/utils"
+import { assetCardClassName, assetGridClassName } from "./asset-gallery"
 
 export function ImageBrowser({ assets }: { assets: ImageAsset[] }) {
   const [query, setQuery] = useState("")
@@ -41,66 +42,67 @@ export function ImageBrowser({ assets }: { assets: ImageAsset[] }) {
   )
 
   return (
-    <Card>
-      <CardContent className="space-y-4 pt-6">
-        <Input
-          type="search"
-          aria-label="Search images"
-          placeholder="Search images…"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-        />
-        <ul aria-label="Images" className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,10rem),1fr))] gap-x-4 gap-y-6">
-          {visible.map((asset) => (
-            <li key={asset.entry.name} className="min-w-0">
-              <button
-                type="button"
-                aria-haspopup="dialog"
-                aria-label={`${asset.name}, ${formatSize(asset.entry.size)}`}
-                title={`${asset.name}\n${asset.entry.name}`}
-                onClick={() => setSelected(asset)}
-                className="group flex h-full w-full cursor-zoom-in flex-col gap-2 rounded-md text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
-              >
-                <span className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-md bg-muted/40 transition-opacity group-hover:opacity-85">
-                  {asset.thumbnail && thumbnails.get(asset.thumbnail.name) ? (
-                    <img
-                      src={thumbnails.get(asset.thumbnail.name)!}
-                      alt=""
-                      className="h-full w-full object-contain"
-                      onError={() =>
-                        setThumbnails((previous) =>
-                          new Map(previous).set(asset.thumbnail!.name, null)
-                        )
-                      }
-                    />
-                  ) : (
-                    <span className="p-3 text-xs text-muted-foreground">
-                      {!asset.thumbnail
-                        ? "No embedded thumbnail"
-                        : thumbnails.has(asset.thumbnail.name)
-                          ? "Thumbnail unavailable"
-                          : "Loading thumbnail…"}
-                    </span>
-                  )}
-                </span>
-                <span className="min-w-0 w-full space-y-1">
-                  <span className="line-clamp-2 min-h-10 break-words text-sm leading-5">
-                    {asset.name}
+    <section aria-label="Images" className="space-y-4">
+      <Input
+        type="search"
+        aria-label="Search images"
+        placeholder="Search images…"
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+      />
+      <ul aria-label="Images" className={assetGridClassName}>
+        {visible.map((asset) => (
+          <li key={asset.entry.name} className="min-w-0">
+            <button
+              type="button"
+              aria-haspopup="dialog"
+              aria-label={`${asset.name}, ${formatSize(asset.entry.size)}`}
+              title={`${asset.name}\n${asset.entry.name}`}
+              onClick={() => setSelected(asset)}
+              className={cn(
+                assetCardClassName,
+                "group flex h-full w-full cursor-zoom-in flex-col gap-2 text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+              )}
+            >
+              <span className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-md bg-muted/40 transition-opacity group-hover:opacity-85">
+                {asset.thumbnail && thumbnails.get(asset.thumbnail.name) ? (
+                  <img
+                    src={thumbnails.get(asset.thumbnail.name)!}
+                    alt=""
+                    className="h-full w-full object-contain"
+                    onError={() =>
+                      setThumbnails((previous) =>
+                        new Map(previous).set(asset.thumbnail!.name, null)
+                      )
+                    }
+                  />
+                ) : (
+                  <span className="p-3 text-sm text-muted-foreground">
+                    {!asset.thumbnail
+                      ? "No embedded thumbnail"
+                      : thumbnails.has(asset.thumbnail.name)
+                        ? "Thumbnail unavailable"
+                        : "Loading thumbnail…"}
                   </span>
-                  <span className="block text-xs text-muted-foreground">
-                    {formatSize(asset.entry.size)}
-                  </span>
+                )}
+              </span>
+              <span className="min-w-0 w-full space-y-1">
+                <span className="line-clamp-2 min-h-10 break-words text-sm leading-5">
+                  {asset.name}
                 </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-        {!visible.length && (
-          <p className="text-sm text-muted-foreground">
-            No images match your search.
-          </p>
-        )}
-      </CardContent>
+                <span className="block text-sm text-muted-foreground">
+                  {formatSize(asset.entry.size)}
+                </span>
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      {!visible.length && (
+        <p className="text-sm text-muted-foreground">
+          No images match your search.
+        </p>
+      )}
       {selected && (
         <ImageLightbox title={selected.name} onClose={() => setSelected(null)}>
           <SelectedImage
@@ -110,7 +112,7 @@ export function ImageBrowser({ assets }: { assets: ImageAsset[] }) {
           />
         </ImageLightbox>
       )}
-    </Card>
+    </section>
   )
 }
 
@@ -166,7 +168,12 @@ function SelectedImage({
       </div>
     )
   }
-  if (!url) return <p role="status" className="px-6 py-4">Loading image…</p>
+  if (!url)
+    return (
+      <p role="status" className="px-6 py-4">
+        Loading image…
+      </p>
+    )
   return (
     <img
       src={url}
