@@ -1,4 +1,3 @@
-import { useState } from "react"
 import { Button } from "./components/ui/button"
 import { Input } from "./components/ui/input"
 import { Card } from "./components/ui/card"
@@ -10,29 +9,27 @@ function iconLabel(type: string) {
 }
 
 export default function DesignSystem() {
-  const [query, setQuery] = useState("")
-  const types = [...nodeIconTypes, "UNKNOWN"].filter(type => `${type} ${iconLabel(type)}`.toLowerCase().replace(/_/g, " ").includes(query.toLowerCase()))
+  const types = [...nodeIconTypes, "UNKNOWN"]
   return (
-    <main className="min-h-screen bg-background px-6 py-12 font-sans text-foreground sm:px-10">
-      <div className="mx-auto max-w-4xl space-y-12">
-        <header className="flex flex-wrap items-center justify-between gap-4">
-          <h1 className="text-lg font-medium">Design system</h1>
-          <Input aria-label="Filter icons" placeholder="Filter icons…" value={query} onChange={event => setQuery(event.target.value)} className="w-56" />
+    <main className="min-h-screen bg-background px-6 py-10 font-sans text-foreground sm:px-10">
+      <div className="mx-auto max-w-5xl space-y-10">
+        <header className="flex items-baseline justify-between border-b pb-6">
+          <h1 className="text-2xl font-medium tracking-tight">Design system</h1>
+          <span className="text-xs text-muted-foreground">Figma Format Parse</span>
         </header>
         <section aria-labelledby="icons-heading" className="space-y-5">
-          <h2 id="icons-heading" className="text-sm text-muted-foreground">Layer icons · 16 px</h2>
-          <div className="grid grid-cols-2 gap-x-6 gap-y-1 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="flex items-baseline justify-between"><h2 id="icons-heading" className="text-sm font-medium">Layer icons</h2><span className="text-xs text-muted-foreground">16 × 16</span></div>
+          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-border sm:grid-cols-4 lg:grid-cols-5">
             {types.map(type => (
-              <div key={type} title={type} className="flex min-h-12 items-center text-sm">
+              <div key={type} title={type} className="flex min-h-28 flex-col items-center justify-center gap-4 bg-background px-2 py-5 text-center text-xs text-muted-foreground [&>span:first-child]:mr-0">
                 <NodeTypeIcon type={type} />
                 <span>{iconLabel(type)}</span>
               </div>
             ))}
           </div>
-          {types.length === 0 && <p className="text-sm text-muted-foreground">No matching icons.</p>}
         </section>
         <section aria-labelledby="components-heading" className="space-y-6 border-t pt-8">
-          <h2 id="components-heading" className="text-sm text-muted-foreground">Components</h2>
+          <h2 id="components-heading" className="text-sm font-medium">Components</h2>
           <div className="flex flex-wrap items-center gap-3">
             <Button>Primary</Button>
             <Button variant="outline">Outline</Button>

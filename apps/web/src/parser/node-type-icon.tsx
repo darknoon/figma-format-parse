@@ -1,23 +1,23 @@
 import type { ReactNode } from "react"
 
 const shapes: Record<string, ReactNode> = {
-  DOCUMENT: <><path d="M4 1.5h5L12 5v9.5H4z" /><path d="M9 1.5V5h3M6 8h4M6 10.5h4" /></>,
-  CANVAS: <path d="M4 1.5h8v13H4z" />,
+  DOCUMENT: <><rect x="3" y="2" width="10" height="12" rx="1.5" /><path d="M6 2v12" /></>,
+  CANVAS: <path d="M3.5 2h6L13 5.5V14H3.5zM9.5 2v3.5H13" />,
   FRAME: <path d="M5 1v14M11 1v14M1 5h14M1 11h14" />,
-  GROUP: <rect x="2.5" y="2.5" width="11" height="11" strokeDasharray="2 2" />,
-  SECTION: <path d="M2 4h5l1.5-2H14v12H2z" />,
-  RESPONSIVE_SET: <><rect x="1.5" y="2.5" width="9" height="9" rx=".5" /><rect x="11.5" y="6.5" width="3" height="7" rx=".5" /><path d="M4 14h4" /></>,
+  GROUP: <path d="M6 2.5H2.5V6m7.5-3.5h3.5V6m0 4v3.5H10m-4 0H2.5V10" />,
+  SECTION: <path d="M2 3h4.5l2 2H14v8H2z" />,
+  RESPONSIVE_SET: <><path d="M7.5 12.5h-5v-10h11v4" /><rect x="9.5" y="8.5" width="4" height="5" rx=".5" /></>,
   TEXT: <path d="M2.5 4V2.5h11V4M8 2.5v11M5.5 13.5h5" />,
   ROUNDED_RECTANGLE: <rect x="2.5" y="2.5" width="11" height="11" rx="2" />,
   ELLIPSE: <circle cx="8" cy="8" r="5.5" />,
   LINE: <path d="m2.5 13.5 11-11" />,
   REGULAR_POLYGON: <path d="m8 2 6 11H2z" />,
   STAR: <path d="m8 1.5 2 4.2 4.5.7-3.2 3.2.7 4.6-4-2.2-4 2.2.7-4.6-3.2-3.2 4.5-.7z" />,
-  VECTOR: <><path d="m3 12 4-9 6 8z" /><path d="M1.5 10.5h3v3h-3zM5.5 1.5h3v3h-3zM11.5 9.5h3v3h-3z" fill="currentColor" stroke="none" /></>,
-  BOOLEAN_OPERATION: <><path d="M8 3H2v7h6z" /><path d="M8 6h6v7H7v-3" /></>,
+  VECTOR: <><path d="M4 11.5C4 5 12 11 12 4.5" /><rect x="2.5" y="11.5" width="3" height="3" /><rect x="10.5" y="1.5" width="3" height="3" /></>,
+  BOOLEAN_OPERATION: <path d="M2.5 2.5h7v4h4v7h-7v-4h-4z" fill="currentColor" fillOpacity=".15" />,
   SYMBOL: <path d="m8 1.5 6.5 6.5L8 14.5 1.5 8z" fill="currentColor" stroke="none" />,
   INSTANCE: <path d="m8 1.5 6.5 6.5L8 14.5 1.5 8z" />,
-  SLICE: <path d="M5 1v10h10M1 5h10v10" strokeDasharray="2 2" />,
+  SLICE: <path d="M5 1.5v9.5h9.5M1.5 5H11v9.5" />,
   MEDIA: <><rect x="2" y="2" width="12" height="12" rx="1" /><circle cx="5.5" cy="5.5" r="1" /><path d="m2 12 4-4 3 3 2-2 3 3" /></>,
 }
 
