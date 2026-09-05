@@ -37,9 +37,9 @@ type NavSelection =
   | { type: "schema" }
 
 export function FigmaFile({ data }: { data: FileContents }) {
-  const [navSelection, setNavSelection] = useState<NavSelection>({
-    type: "meta",
-  })
+  const [navSelection, setNavSelection] = useState<NavSelection>(() => ({
+    type: "meta" in data ? "meta" : data.preview ? "preview" : "misc",
+  }))
   const node =
     navSelection.type === "layer" && selectedNode(data.message, navSelection)
   const { message } = data

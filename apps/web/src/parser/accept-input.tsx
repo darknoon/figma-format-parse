@@ -150,7 +150,6 @@ function ErrorRecovery({ error }: { error: Error }) {
   return (
     <div>
       <p>There was an error parsing your data</p>
-      <p>{typeof error}</p>
       <p className="text-sm text-muted-foreground">{error.message}</p>
     </div>
   )
