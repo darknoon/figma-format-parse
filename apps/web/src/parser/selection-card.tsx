@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { useCardSpring } from "./use-card-spring"
 import type { FigmaImageEntry } from "fig-kiwi/blob"
 import { imageId, type ImageAsset } from "./image-assets"
 import type { Color, NodeChange } from "fig-kiwi/schema-defs"
@@ -10,6 +11,10 @@ function colorHex(color: Color) {
 }
 
 export function SelectionCard({ node, assets = [], onSeeAll }: { node: NodeChange; assets: ImageAsset[]; onSeeAll: () => void }) {
+  const [hovered, setHovered] = useState(false)
+  const [focused, setFocused] = useState(false)
+  const expanded = hovered || focused
+  const spring = useCardSpring(expanded)
   const fills = node.fillPaints?.filter((paint) => paint.visible !== false) ?? []
   const paint = fills[0]
   const asset = assets.find((asset) => asset.key === imageId(paint?.image ?? paint?.animatedImage))
@@ -20,11 +25,18 @@ export function SelectionCard({ node, assets = [], onSeeAll }: { node: NodeChang
     : paint?.type?.startsWith("GRADIENT") ? "Gradient" : paint?.type?.toLowerCase()
   return (
     <aside
+      ref={spring.card}
       aria-label="Selected node"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocus={() => setFocused(true)}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false)
+      }}
       tabIndex={0}
-      className="group absolute right-4 top-4 z-10 w-60 hover:w-66 focus-within:w-66 transition-[width] duration-150 motion-reduce:transition-none max-w-[calc(100%-2rem)] rounded-xl border bg-card/95 px-3 py-2 text-sm shadow-sm backdrop-blur-sm focus-visible:outline-2 focus-visible:outline-blue-400"
+      className="absolute right-4 top-4 z-10 w-60 max-w-[calc(100%-2rem)] rounded-xl border bg-card/95 px-3 py-2 text-base shadow-sm backdrop-blur-sm focus-visible:outline-2 focus-visible:outline-blue-400"
     >
-      <dl className="space-y-1 text-xs">
+      <dl className="space-y-1 text-base">
         <div className="flex items-center justify-between gap-6">
           <dt className="text-muted-foreground">{!paint && node.backgroundColor ? "Background" : "Fill"}</dt>
           <dd className="flex items-center gap-1.5">
@@ -48,9 +60,9 @@ export function SelectionCard({ node, assets = [], onSeeAll }: { node: NodeChang
           </div>
         )}
       </dl>
-      <div className="grid grid-rows-[0fr] opacity-0 transition-[grid-template-rows,opacity] duration-150 group-hover:grid-rows-[1fr] group-hover:opacity-100 group-focus-within:grid-rows-[1fr] group-focus-within:opacity-100 motion-reduce:transition-none">
-        <div className="overflow-hidden">
-          <dl className="mt-2 space-y-1 border-t pt-2 text-xs">
+      <div ref={spring.body} className="h-0 overflow-hidden opacity-0" aria-hidden={!expanded}>
+        <div ref={spring.content} className="flow-root">
+          <dl className="mt-2 space-y-1 border-t pt-2 text-base">
             {node.size && <div className="flex justify-between gap-6">
               <dt className="text-muted-foreground">Size</dt>
               <dd className="tabular-nums">{Number(node.size.x.toFixed(2))} × {Number(node.size.y.toFixed(2))}</dd>
@@ -64,7 +76,7 @@ export function SelectionCard({ node, assets = [], onSeeAll }: { node: NodeChang
               <dd className="tabular-nums">{Number(node.cornerRadius.toFixed(2))}</dd>
             </div>}
           </dl>
-          <button type="button" onClick={onSeeAll} className="mt-3 block text-xs text-blue-600 hover:underline focus-visible:outline-2 focus-visible:outline-blue-400">
+          <button type="button" tabIndex={expanded ? 0 : -1} onClick={onSeeAll} className="mt-3 block text-base text-blue-600 hover:underline focus-visible:outline-2 focus-visible:outline-blue-400">
             See all <span aria-hidden="true">↗</span>
           </button>
         </div>
