@@ -4,9 +4,8 @@ import { DragEvent, ClipboardEvent, useState } from "react"
 import {
   readHTMLMessage,
   ParsedFigmaHTML,
-  ParsedFigmaArchive,
 } from "fig-kiwi"
-import { readFigFileBlob } from "fig-kiwi/blob"
+import { readFigFileBlob, type ParsedFigmaBlob } from "fig-kiwi/blob"
 import AsyncOperation, { LoaderState, ProgressUpdate } from "./async-operation"
 import { PasteButton } from "./paste-button"
 import { FigmaFile } from "./file-viewer"
@@ -66,7 +65,7 @@ export default function AcceptInput() {
     <>
       {file ? (
         <AsyncOperation input={file} operation={parseFile}>
-          {(state: LoaderState<ParsedFigmaArchive>) => (
+          {(state: LoaderState<ParsedFigmaBlob>) => (
             <>
               {state.status == "loading" && <Loading up={state} />}
               {state.status === "done" && <FigmaFile data={state.data} />}
@@ -121,7 +120,7 @@ async function smallDelay() {
 
 async function* parseFile(
   file: File
-): AsyncGenerator<ProgressUpdate, ParsedFigmaArchive> {
+): AsyncGenerator<ProgressUpdate, ParsedFigmaBlob> {
   yield {
     message: "Reading Figma file",
     progress: { current: 0, total: 2 },

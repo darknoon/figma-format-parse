@@ -5,6 +5,6 @@ export const CodeView = React.forwardRef<
   HTMLPreElement,
   React.HTMLAttributes<HTMLPreElement>
 >(({ className, ...props }, ref) => (
-  <pre ref={ref} className={cn("text-xs p-2", className)} {...props} />
+  <pre ref={ref} className={cn("max-w-full overflow-x-auto text-xs p-2", className)} {...props} />
 ))
 CodeView.displayName = "CodeView"

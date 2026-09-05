@@ -10,9 +10,9 @@ import {
   FigmaMeta,
   Header,
   Message,
-  ParsedFigmaArchive,
   ParsedFigmaHTML,
 } from "fig-kiwi"
+import type { ParsedFigmaBlob } from "fig-kiwi/blob"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -20,13 +20,14 @@ import { GUID, NodeChange } from "fig-kiwi/schema-defs"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { TypePill } from "./type-pill"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { CodeView } from "./code-view"
 import { hex, replacerForHex } from "./hex"
 import { Button } from "@/components/ui/button"
 import { compileSchema } from "kiwi-schema"
+import { ImagePreview } from "./image-lightbox"
+import { ImageBrowser } from "./image-browser"
 
-type FileContents = ParsedFigmaArchive | ParsedFigmaHTML
+type FileContents = ParsedFigmaBlob | ParsedFigmaHTML
 
 type NavSelection =
   | { type: "layer"; guid: GUID }
@@ -34,6 +35,7 @@ type NavSelection =
   | { type: "meta" }
   | { type: "misc" }
   | { type: "blobs" }
+  | { type: "images" }
   | { type: "schema" }
 
 export function FigmaFile({ data }: { data: FileContents }) {
@@ -56,19 +58,24 @@ export function FigmaFile({ data }: { data: FileContents }) {
     ...rest
   } = message
   const type = "meta" in data ? "paste" : "file"
+  const imageEntries = "imageEntries" in data ? data.imageEntries : undefined
   return (
-    <div className="flex flex-row h-full min-h-screen max-h-screen">
-      <ScrollArea className="max-w-sm min-h-screen border-r-gray-200 border-r">
+    <div className="flex h-dvh w-full overflow-hidden">
+      <nav
+        aria-label="File sections"
+        className="h-full w-48 shrink-0 overflow-y-auto border-r-gray-200 border-r sm:w-64 lg:w-80"
+      >
         <Sidebar
           type={type}
           message={data.message}
           navSelection={navSelection}
           setNavSelection={setNavSelection}
+          imageCount={imageEntries?.length ?? 0}
         />
-      </ScrollArea>
-      <div className="flex-1 ">
-        <ScrollArea className="h-full">
-          <div className="p-8">
+      </nav>
+      <div className="min-w-0 flex-1">
+        <div className="h-full overflow-y-auto">
+          <div className="p-4 sm:p-8">
             {navSelection.type === "meta" && "meta" in data && (
               <FigmaPasteInfo
                 meta={data.meta}
@@ -108,12 +115,11 @@ export function FigmaFile({ data }: { data: FileContents }) {
                       <p className="text-xs text-gray-700 dark:text-gray-400">
                         {data.preview.length} bytes
                       </p>
-                      <img
-                        alt=""
+                      <ImagePreview
+                        alt="File preview"
                         src={`data:image/png;base64,${fromByteArray(
                           data.preview
                         )}`}
-                        className="w-16"
                       />
                     </div>
                   </CardContent>
@@ -121,6 +127,9 @@ export function FigmaFile({ data }: { data: FileContents }) {
               )}
 
             {navSelection.type === "blobs" && blobs && <Blobs blobs={blobs} />}
+            {navSelection.type === "images" && imageEntries && (
+              <ImageBrowser entries={imageEntries} message={message} />
+            )}
             {node && (
               <NodeContent
                 node={node}
@@ -133,7 +142,7 @@ export function FigmaFile({ data }: { data: FileContents }) {
               />
             )}
           </div>
-        </ScrollArea>
+        </div>
       </div>
     </div>
   )
@@ -225,11 +234,13 @@ function Sidebar({
   message,
   navSelection,
   setNavSelection,
+  imageCount,
 }: {
   type: "paste" | "file"
   message: Message
   navSelection: NavSelection
   setNavSelection: (navSelection: NavSelection) => void
+  imageCount: number
 }) {
   const { nodeChanges = [] } = message
   return (
@@ -271,6 +282,14 @@ function Sidebar({
           >
             Blobs
           </SidebarItem>
+          {imageCount > 0 && (
+            <SidebarItem
+              onClick={() => setNavSelection({ type: "images" })}
+              selected={navSelection.type === "images"}
+            >
+              Images ({imageCount})
+            </SidebarItem>
+          )}
         </ul>
       </div>
       <div>
@@ -290,7 +309,7 @@ function Sidebar({
                 className="flex flex-row space-x-2"
               >
                 <TypePill type={type || "?"} />
-                <div className="text-ellipsis whitespace-nowrap flex-1">
+                <div className="min-w-0 truncate flex-1">
                   {name || "no name"}
                 </div>
               </SidebarItem>
@@ -303,24 +322,28 @@ function Sidebar({
 }
 
 const SidebarItem = React.forwardRef<
-  HTMLLIElement,
-  React.HTMLAttributes<HTMLLIElement> & {
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement> & {
     selected: boolean
   }
 >(({ className, selected, children, ...props }, ref) => {
   return (
-    <li
-      ref={ref}
-      className={cn(
-        className,
-        "rounded-sm p-1 pl-2 pr-3",
-        "hover:bg-gray-200 dark:hover:bg-gray-800",
-        selected &&
-          "bg-gray-200 dark:bg-gray-800 text-black dark: text-grey-200"
-      )}
-      {...props}
-    >
-      {children}
+    <li>
+      <button
+        type="button"
+        ref={ref}
+        aria-current={selected ? "page" : undefined}
+        className={cn(
+          className,
+          "w-full rounded-sm p-1 pl-2 pr-3 text-left focus-visible:outline-2 focus-visible:-outline-offset-2",
+          "hover:bg-gray-200 dark:hover:bg-gray-800",
+          selected &&
+            "bg-gray-200 dark:bg-gray-800 text-black dark: text-grey-200"
+        )}
+        {...props}
+      >
+        {children}
+      </button>
     </li>
   )
 })
