@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import type { FigmaImageEntry } from "fig-kiwi/blob"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ImageLightbox } from "./image-lightbox"
 import { readThumbnails, type ImageAsset } from "./image-assets"
@@ -42,13 +42,7 @@ export function ImageBrowser({ assets }: { assets: ImageAsset[] }) {
 
   return (
     <Card>
-      <CardHeader>
-        <h2 className="text-lg tracking-tight">Images ({assets.length})</h2>
-        <p className="text-sm text-muted-foreground">
-          Thumbnails load automatically. Select an image to view full size.
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 pt-6">
         <Input
           type="search"
           aria-label="Search images"
@@ -56,20 +50,22 @@ export function ImageBrowser({ assets }: { assets: ImageAsset[] }) {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
-        <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <ul aria-label="Images" className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,10rem),1fr))] gap-x-4 gap-y-6">
           {visible.map((asset) => (
             <li key={asset.entry.name} className="min-w-0">
               <button
                 type="button"
                 aria-haspopup="dialog"
+                aria-label={`${asset.name}, ${formatSize(asset.entry.size)}`}
+                title={`${asset.name}\n${asset.entry.name}`}
                 onClick={() => setSelected(asset)}
-                className="flex h-full w-full flex-col gap-3 rounded-md border p-3 text-left hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2"
+                className="group flex h-full w-full cursor-zoom-in flex-col gap-2 rounded-md text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
               >
-                <span className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-sm bg-muted/50">
+                <span className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-md bg-muted/40 transition-opacity group-hover:opacity-85">
                   {asset.thumbnail && thumbnails.get(asset.thumbnail.name) ? (
                     <img
                       src={thumbnails.get(asset.thumbnail.name)!}
-                      alt={`Thumbnail of ${asset.name}`}
+                      alt=""
                       className="h-full w-full object-contain"
                       onError={() =>
                         setThumbnails((previous) =>
@@ -88,17 +84,8 @@ export function ImageBrowser({ assets }: { assets: ImageAsset[] }) {
                   )}
                 </span>
                 <span className="min-w-0 w-full space-y-1">
-                  <span
-                    className="line-clamp-2 break-words text-sm font-medium"
-                    title={asset.name}
-                  >
+                  <span className="line-clamp-2 min-h-10 break-words text-sm leading-5">
                     {asset.name}
-                  </span>
-                  <span
-                    className="block truncate font-mono text-xs text-muted-foreground"
-                    title={asset.entry.name}
-                  >
-                    {asset.entry.name}
                   </span>
                   <span className="block text-xs text-muted-foreground">
                     {formatSize(asset.entry.size)}

@@ -362,8 +362,12 @@ function Sidebar({
             <SidebarItem
               onClick={() => setNavSelection({ type: "images" })}
               selected={navSelection.type === "images"}
+              className="flex items-center justify-between gap-2"
             >
-              Images ({imageCount})
+              <span>Images</span>
+              <span className="min-w-6 rounded-full bg-background/70 px-2 py-0.5 text-center text-xs tabular-nums text-muted-foreground">
+                {imageCount}
+              </span>
             </SidebarItem>
           )}
         </ul>
