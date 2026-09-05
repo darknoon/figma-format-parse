@@ -1,44 +1,41 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import type { FigmaImageEntry } from "fig-kiwi/blob"
-import type { Message } from "fig-kiwi"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ImageLightbox } from "./image-lightbox"
-import { hex } from "./hex"
+import { readThumbnails, type ImageAsset } from "./image-assets"
 
-export function ImageBrowser({
-  entries,
-  message,
-}: {
-  entries: FigmaImageEntry[]
-  message: Message
-}) {
+export function ImageBrowser({ assets }: { assets: ImageAsset[] }) {
   const [query, setQuery] = useState("")
-  const [selected, setSelected] = useState<FigmaImageEntry | null>(null)
-  const names = useMemo(() => {
-    const names = new Map<string, string>()
-    for (const node of message.nodeChanges ?? []) {
-      for (const paint of [
-        ...(node.fillPaints ?? []),
-        ...(node.strokePaints ?? []),
-      ]) {
-        for (const [image, suffix] of [
-          [paint.image, ""],
-          [paint.imageThumbnail, " (thumbnail)"],
-          [paint.animatedImage, ""],
-        ] as const) {
-          if (image?.hash && (image.name || node.name)) {
-            const hash = hex(image.hash)
-            if (!names.has(hash))
-              names.set(hash, `${image.name || node.name}${suffix}`)
-          }
-        }
+  const [selected, setSelected] = useState<ImageAsset | null>(null)
+  const [thumbnails, setThumbnails] = useState<Map<string, string | null>>(
+    () => new Map()
+  )
+
+  useEffect(() => {
+    const controller = new AbortController()
+    const urls: string[] = []
+    setThumbnails(new Map())
+    void readThumbnails(
+      assets,
+      controller.signal,
+      (entry, blob) => {
+        const url = URL.createObjectURL(blob)
+        urls.push(url)
+        setThumbnails((previous) => new Map(previous).set(entry.name, url))
+      },
+      (entry) => {
+        setThumbnails((previous) => new Map(previous).set(entry.name, null))
       }
+    )
+    return () => {
+      controller.abort()
+      for (const url of urls) URL.revokeObjectURL(url)
     }
-    return names
-  }, [message])
-  const visible = entries.filter((entry) =>
-    `${names.get(entry.name) ?? ""} ${entry.name}`
+  }, [assets])
+
+  const visible = assets.filter((asset) =>
+    `${asset.name} ${asset.entry.name} ${asset.thumbnail?.name ?? ""}`
       .toLowerCase()
       .includes(query.toLowerCase())
   )
@@ -46,9 +43,9 @@ export function ImageBrowser({
   return (
     <Card>
       <CardHeader>
-        <h2 className="text-lg tracking-tight">Images ({entries.length})</h2>
+        <h2 className="text-lg tracking-tight">Images ({assets.length})</h2>
         <p className="text-sm text-muted-foreground">
-          Select an image to load and view it.
+          Thumbnails load automatically. Select an image to view full size.
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -60,43 +57,51 @@ export function ImageBrowser({
           onChange={(event) => setQuery(event.target.value)}
         />
         <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {visible.map((entry) => (
-            <li key={entry.name} className="min-w-0">
+          {visible.map((asset) => (
+            <li key={asset.entry.name} className="min-w-0">
               <button
                 type="button"
                 aria-haspopup="dialog"
-                onClick={() => setSelected(entry)}
-                className="flex w-full items-center gap-3 rounded-md border p-4 text-left hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2"
+                onClick={() => setSelected(asset)}
+                className="flex h-full w-full flex-col gap-3 rounded-md border p-3 text-left hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2"
               >
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  className="shrink-0 text-muted-foreground"
-                  aria-hidden="true"
-                >
-                  <rect x="3" y="3" width="18" height="18" rx="2" />
-                  <circle cx="8" cy="8" r="1.5" />
-                  <path d="m21 15-5-5L5 21" />
-                </svg>
-                <span className="min-w-0 space-y-1">
+                <span className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-sm bg-muted/50">
+                  {asset.thumbnail && thumbnails.get(asset.thumbnail.name) ? (
+                    <img
+                      src={thumbnails.get(asset.thumbnail.name)!}
+                      alt={`Thumbnail of ${asset.name}`}
+                      className="h-full w-full object-contain"
+                      onError={() =>
+                        setThumbnails((previous) =>
+                          new Map(previous).set(asset.thumbnail!.name, null)
+                        )
+                      }
+                    />
+                  ) : (
+                    <span className="p-3 text-xs text-muted-foreground">
+                      {!asset.thumbnail
+                        ? "No embedded thumbnail"
+                        : thumbnails.has(asset.thumbnail.name)
+                          ? "Thumbnail unavailable"
+                          : "Loading thumbnail…"}
+                    </span>
+                  )}
+                </span>
+                <span className="min-w-0 w-full space-y-1">
                   <span
-                    className="block truncate text-sm font-medium"
-                    title={names.get(entry.name) ?? entry.name}
+                    className="line-clamp-2 break-words text-sm font-medium"
+                    title={asset.name}
                   >
-                    {names.get(entry.name) ?? entry.name}
+                    {asset.name}
                   </span>
                   <span
                     className="block truncate font-mono text-xs text-muted-foreground"
-                    title={entry.name}
+                    title={asset.entry.name}
                   >
-                    {entry.name}
+                    {asset.entry.name}
                   </span>
                   <span className="block text-xs text-muted-foreground">
-                    {formatSize(entry.size)}
+                    {formatSize(asset.entry.size)}
                   </span>
                 </span>
               </button>
@@ -110,14 +115,11 @@ export function ImageBrowser({
         )}
       </CardContent>
       {selected && (
-        <ImageLightbox
-          title={names.get(selected.name) ?? selected.name}
-          onClose={() => setSelected(null)}
-        >
+        <ImageLightbox title={selected.name} onClose={() => setSelected(null)}>
           <SelectedImage
-            key={selected.name}
-            entry={selected}
-            alt={names.get(selected.name) ?? selected.name}
+            key={selected.entry.name}
+            entry={selected.entry}
+            alt={selected.name}
           />
         </ImageLightbox>
       )}

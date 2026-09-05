@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button"
 import { compileSchema } from "kiwi-schema"
 import { ImagePreview } from "./image-lightbox"
 import { ImageBrowser } from "./image-browser"
+import { imageAssets } from "./image-assets"
 
 type FileContents = ParsedFigmaBlob | ParsedFigmaHTML
 
@@ -59,6 +60,10 @@ export function FigmaFile({ data }: { data: FileContents }) {
   } = message
   const type = "meta" in data ? "paste" : "file"
   const imageEntries = "imageEntries" in data ? data.imageEntries : undefined
+  const assets = useMemo(
+    () => imageAssets(imageEntries ?? [], message),
+    [imageEntries, message]
+  )
   return (
     <div className="flex h-dvh w-full overflow-hidden">
       <nav
@@ -70,7 +75,7 @@ export function FigmaFile({ data }: { data: FileContents }) {
           message={data.message}
           navSelection={navSelection}
           setNavSelection={setNavSelection}
-          imageCount={imageEntries?.length ?? 0}
+          imageCount={assets.length}
         />
       </nav>
       <div className="min-w-0 flex-1">
@@ -128,7 +133,7 @@ export function FigmaFile({ data }: { data: FileContents }) {
 
             {navSelection.type === "blobs" && blobs && <Blobs blobs={blobs} />}
             {navSelection.type === "images" && imageEntries && (
-              <ImageBrowser entries={imageEntries} message={message} />
+              <ImageBrowser assets={assets} />
             )}
             {node && (
               <NodeContent
