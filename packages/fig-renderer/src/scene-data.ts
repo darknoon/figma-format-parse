@@ -1,6 +1,7 @@
 import type { Message } from "fig-kiwi"
 import type { Glyph, Matrix, NodeChange, TextData } from "fig-kiwi/schema-defs"
 import { buildNodeTree, type TreeNode } from "./hierarchy"
+import { expandInstances } from "./instances"
 import {
   decodeCommands,
   decodeVectorNetwork,
@@ -85,7 +86,7 @@ export function buildScene(message: Message) {
   const invalidPaths = new Set<number>()
   const networks = new Map<string, { fill: string; stroke: string }>()
   const order: SceneItem[] = []
-  const stack = tree.roots
+  const stack = expandInstances(tree)
     .map((item) => ({
       item,
       world: identity,
