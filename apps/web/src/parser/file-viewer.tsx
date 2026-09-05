@@ -548,9 +548,12 @@ function NodeContent({
         ref={nodeHeader}
         className="sticky top-0 z-10 rounded-t-lg border-b bg-card"
       >
-        <h2 className="break-words text-lg tracking-tight">
-          {name || "no name"}
-        </h2>
+        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+          <h2 className="min-w-0 break-words text-lg tracking-tight">
+            {name || "no name"}
+          </h2>
+          <FigmaLink href={href} />
+        </div>
         <dl className="grid grid-cols-2 gap-x-6 gap-y-3 pt-3 text-sm">
           {summary.map(({ label, value }) => (
             <div key={label} className="min-w-0">
@@ -571,7 +574,6 @@ function NodeContent({
             <code className="break-all">{blobReference.path}</code>.
           </p>
         )}
-        <FigmaLink href={href} />
       </CardHeader>
       <CardContent className="pt-6">
         <ResponsiveSetInfo node={node} nodes={nodes ?? []} onSelect={onSelect} />
