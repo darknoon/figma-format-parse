@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test": "bun test ./tests",
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",

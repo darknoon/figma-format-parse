@@ -19,7 +19,7 @@ import { Label } from "@/components/ui/label"
 import { GUID, NodeChange } from "fig-kiwi/schema-defs"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
-import { TypePill } from "./type-pill"
+import { NodeTree } from "./node-tree"
 import { CodeView } from "./code-view"
 import { hex, replacerForHex } from "./hex"
 import { Button } from "@/components/ui/button"
@@ -294,28 +294,11 @@ function Sidebar({
       </div>
       <div>
         <h2 className="font-medium p-2 text-sm">Nodes</h2>
-        <ol className="flex flex-col space-y-1 overflow-clip">
-          {nodeChanges.map((n) => {
-            if (!n.guid) return null
-            const { guid, name, type } = n
-            return (
-              <SidebarItem
-                key={formatGUID(guid)}
-                selected={
-                  navSelection.type === "layer" &&
-                  formatGUID(navSelection.guid) === formatGUID(guid)
-                }
-                onClick={() => setNavSelection({ type: "layer", guid })}
-                className="flex flex-row space-x-2"
-              >
-                <TypePill type={type || "?"} />
-                <div className="min-w-0 truncate flex-1">
-                  {name || "no name"}
-                </div>
-              </SidebarItem>
-            )
-          })}
-        </ol>
+        <NodeTree
+          nodes={nodeChanges}
+          selected={navSelection.type === "layer" ? navSelection.guid : undefined}
+          onSelect={(guid) => setNavSelection({ type: "layer", guid })}
+        />
       </div>
     </div>
   )

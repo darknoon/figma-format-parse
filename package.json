@@ -8,7 +8,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "typecheck": "bun --filter '*' typecheck",
-    "test": "bun --filter fig-kiwi test",
+    "test": "bun --filter '*' test",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
