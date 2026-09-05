@@ -10,12 +10,14 @@ import {
   inspectCommands,
   inspectVectorNetwork,
   type DecodedVectorNetwork,
+  type PathCommand,
 } from "./geometry"
 import {
   commandByteRanges,
   networkByteRanges,
   type BlobByteRange,
 } from "./blob-ranges"
+import { pathControls } from "./path-controls"
 import "./blob-inspector.css"
 
 export interface BlobInspectorProps {
@@ -111,6 +113,7 @@ function DecodedBlob({
         decoded ? (
           <GeometryPreview
             path={commands?.path}
+            commands={commands?.commands}
             network={network}
             glyph={glyph}
             expanded={showDetails}
@@ -129,6 +132,7 @@ function DecodedBlob({
           {decoded ? (
             <GeometryPreview
               path={commands?.path}
+              commands={commands?.commands}
               network={network}
               glyph={glyph}
               expanded={showDetails}
@@ -202,17 +206,20 @@ const pair = (x: number, y: number) => `(${number(x)}, ${number(y)})`
 
 function GeometryPreview({
   path,
+  commands,
   network,
   glyph,
   expanded,
   renderType,
 }: {
   path?: string
+  commands?: PathCommand[]
   network?: DecodedVectorNetwork
   glyph: boolean
   expanded: boolean
   renderType?: BlobInspectorProps["renderType"]
 }) {
+  const controls = useMemo(() => pathControls(commands ?? []), [commands])
   const drawing = useRef<SVGGElement>(null)
   const geometry = useRef<SVGGElement>(null)
   const [bounds, setBounds] = useState({ x: 0, y: 0, width: 100, height: 100 })
@@ -341,6 +348,10 @@ function GeometryPreview({
               </g>
             </g>
             <g transform={glyph ? "scale(1 -1)" : undefined}>
+              {beziers && controls.lines.map(([a, b], i) => (
+                <path key={`path-${i}`} d={`M${a.x} ${a.y}L${b.x} ${b.y}`}
+                  stroke="#a855f7" strokeWidth={1} vectorEffect="non-scaling-stroke" />
+              ))}
               {beziers &&
                 network?.segments.map((s, i) => {
                   const a = network.vertices[s.start],
@@ -357,6 +368,15 @@ function GeometryPreview({
             </g>
           </g>
           <g transform={glyph ? "scale(1 -1)" : undefined}>
+            {beziers && controls.handles.map((v, i) => (
+              <circle key={`handle-${i}`} cx={v.x} cy={v.y} r={radius * 0.85}
+                fill="white" stroke="#a855f7" strokeWidth={1} vectorEffect="non-scaling-stroke" />
+            ))}
+            {beziers && controls.anchors.map((v, i) => (
+              <rect key={`anchor-${i}`} x={v.x - radius} y={v.y - radius}
+                width={radius * 2} height={radius * 2} fill="white" stroke="#2563eb"
+                strokeWidth={1} vectorEffect="non-scaling-stroke" />
+            ))}
             {beziers &&
               network?.segments.map((s, i) => {
                 const a = network.vertices[s.start],
@@ -405,7 +425,7 @@ function GeometryPreview({
       )}
       {expanded && hasGeometry && (
         <div className="fig-blob__preview-controls">
-          {network && (
+          {(network || controls.anchors.length > 0) && (
             <button
               type="button"
               aria-label="Show Bézier controls"
