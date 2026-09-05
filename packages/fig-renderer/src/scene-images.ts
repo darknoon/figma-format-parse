@@ -25,6 +25,7 @@ export function useSceneImages(
   const [images, setImages] = useState<Map<string, LoadedImage>>(new Map())
   const [failed, setFailed] = useState(0)
   const [pending, setPending] = useState(0)
+  const [total, setTotal] = useState(0)
   useEffect(() => {
     const controller = new AbortController()
     const urls: string[] = []
@@ -47,6 +48,7 @@ export function useSceneImages(
     const loaded = new Map<string, LoadedImage>()
     setImages(new Map())
     setFailed(0)
+    setTotal(queue.length)
     setPending(queue.length)
     let next = 0
     async function worker() {
@@ -87,5 +89,5 @@ export function useSceneImages(
       for (const url of urls) URL.revokeObjectURL(url)
     }
   }, [items, message, entries])
-  return { images, failed, pending }
+  return { images, failed, pending, total }
 }

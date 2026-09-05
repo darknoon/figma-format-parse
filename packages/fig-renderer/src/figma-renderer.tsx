@@ -67,7 +67,7 @@ export function FigmaRenderer({
       ),
     [roots]
   )
-  const { images, failed, pending } = useSceneImages(
+  const { images, failed, pending, total } = useSceneImages(
     items,
     message,
     imageEntries
@@ -243,9 +243,18 @@ export function FigmaRenderer({
   return (
     <section className="fig-renderer" aria-label="Scene preview">
       {pending > 0 && (
-        <span role="status" className="fig-renderer__status">
-          Loading images…
-        </span>
+        <div className="fig-renderer__status fig-renderer__image-progress">
+          <div className="fig-renderer__progress-label">
+            <span>Loading images</span>
+            <span>{total - pending}/{total}</span>
+          </div>
+          <progress
+            aria-label="Loading images"
+            aria-valuetext={`${total - pending} of ${total} images processed${failed ? `, ${failed} unavailable` : ""}`}
+            max={total || 1}
+            value={total - pending}
+          />
+        </div>
       )}
       {pending === 0 && failed > 0 && (
         <span role="status" className="fig-renderer__status">
