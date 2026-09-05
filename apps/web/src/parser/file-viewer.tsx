@@ -17,7 +17,6 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { GUID, NodeChange } from "fig-kiwi/schema-defs"
-import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { NodeTree } from "./node-tree"
 import { CodeView } from "./code-view"
@@ -30,22 +29,12 @@ import { imageAssets } from "./image-assets"
 import { indexBlobReferences } from "./blob-references"
 import { SiblingPosition } from "./sibling-position"
 import { SplitView } from "@/components/split-view"
+import { useViewerNavigation, type NavSelection } from "./use-viewer-navigation"
 
 type FileContents = ParsedFigmaBlob | ParsedFigmaHTML
 
-type NavSelection =
-  | { type: "layer"; guid: GUID; blob?: { index: number; path: string } }
-  | { type: "preview" }
-  | { type: "meta" }
-  | { type: "misc" }
-  | { type: "blobs" }
-  | { type: "images" }
-  | { type: "schema" }
-
 export function FigmaFile({ data }: { data: FileContents }) {
-  const [navSelection, setNavSelection] = useState<NavSelection>(() => ({
-    type: "meta" in data ? "meta" : data.preview ? "preview" : "misc",
-  }))
+  const [navSelection, setNavSelection] = useViewerNavigation(data)
   const content = useRef<HTMLDivElement>(null)
   useLayoutEffect(() => {
     content.current?.scrollTo({ top: 0, left: 0 })
