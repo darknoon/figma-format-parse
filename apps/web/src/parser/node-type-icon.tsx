@@ -22,6 +22,8 @@ const shapes: Record<string, ReactNode> = {
   MEDIA: <><rect x="2" y="2" width="12" height="12" rx="1" /><circle cx="5.5" cy="5.5" r="1" /><path d="m2 12 4-4 3 3 2-2 3 3" /></>,
 }
 
+export const nodeIconTypes = Object.keys(shapes)
+
 export function NodeTypeIcon({ type }: { type: string }) {
   return (
     <span title={type.replace(/_/g, " ").toLowerCase()} className={`mr-2 flex h-5 w-4 items-center justify-center ${type === "SYMBOL" || type === "INSTANCE" ? "text-purple-500" : "text-muted-foreground"}`}>
