@@ -21,7 +21,6 @@ import { CodeView } from "./code-view"
 import { jsonFieldRange } from "./json-field-range"
 import { replacerForHex } from "./hex"
 import { HexView } from "./hex-view"
-import { Button } from "@/components/ui/button"
 import { compileSchema } from "kiwi-schema"
 import { ImageBrowser } from "./image-browser"
 import { imageAssets } from "./image-assets"
@@ -439,8 +438,24 @@ function figmaUrl(fileKey: string, guid?: GUID) {
 function FigmaLink({ href, name }: { href?: string; name?: string }) {
   if (!href) return null
   return (
-    <a href={href} target="_blank" rel="noreferrer" className="underlin mb-2">
-      <Button>{name ? `Open ${name} in Figma ->` : `Open in Figma ->`}</Button>
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="inline-flex w-fit items-center gap-1 rounded-sm text-sm text-blue-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+    >
+      {name ? `Open ${name} in Figma` : "Open in Figma"}
+      <svg
+        aria-hidden="true"
+        width="12"
+        height="12"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      >
+        <path d="M7 17 17 7M7 7h10v10" />
+      </svg>
     </a>
   )
 }
