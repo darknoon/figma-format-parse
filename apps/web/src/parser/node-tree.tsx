@@ -13,9 +13,11 @@ export function NodeTree({
   nodes,
   selected,
   onSelect,
+  focusSelection = true,
 }: {
   nodes: NodeChange[]
   selected?: GUID
+  focusSelection?: boolean
   onSelect: (guid: GUID) => void
 }) {
   const tree = useMemo(() => buildNodeTree(nodes), [nodes])
@@ -55,9 +57,9 @@ export function NodeTree({
   useLayoutEffect(() => {
     if (!selectedId) return
     const element = elements.current.get(selectedId)
-    element?.focus({ preventScroll: true })
+    if (focusSelection) element?.focus({ preventScroll: true })
     element?.scrollIntoView({ block: "nearest", inline: "nearest" })
-  }, [selectedId, rows])
+  }, [selectedId, rows, focusSelection])
 
   const tabStop =
     rows.find(({ item }) => item.id === focused)?.item.id ?? rows[0]?.item.id
@@ -127,7 +129,8 @@ export function NodeTree({
             style={{ paddingLeft: 4 + (level - 1) * 16 }}
             className={cn(
               "flex min-w-0 cursor-default items-center rounded-sm py-1 pr-2 hover:bg-gray-200 dark:hover:bg-gray-800 focus-visible:outline-2 focus-visible:-outline-offset-2",
-              item.id === selectedId && "bg-gray-200 text-foreground dark:bg-gray-800"
+              item.id === selectedId &&
+                "bg-gray-200 text-foreground dark:bg-gray-800"
             )}
           >
             {hasChildren ? (

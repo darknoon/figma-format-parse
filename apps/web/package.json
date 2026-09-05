@@ -23,7 +23,8 @@
     "base64-js": "^1.5.1",
     "react-dom": "latest",
     "tailwind-merge": "^1.14.0",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "fig-renderer": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "latest",

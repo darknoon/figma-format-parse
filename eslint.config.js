@@ -1,8 +1,8 @@
-import js from "@eslint/js";
-import tseslint from "typescript-eslint";
-import reactHooks from "eslint-plugin-react-hooks";
-import reactRefresh from "eslint-plugin-react-refresh";
-import globals from "globals";
+import js from "@eslint/js"
+import tseslint from "typescript-eslint"
+import reactHooks from "eslint-plugin-react-hooks"
+import reactRefresh from "eslint-plugin-react-refresh"
+import globals from "globals"
 
 export default tseslint.config(
   {
@@ -37,7 +37,10 @@ export default tseslint.config(
     },
   },
   {
-    files: ["apps/web/src/**/*.{ts,tsx}"],
+    files: [
+      "apps/web/src/**/*.{ts,tsx}",
+      "packages/fig-renderer/src/**/*.{ts,tsx}",
+    ],
     plugins: {
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
@@ -61,5 +64,5 @@ export default tseslint.config(
     rules: {
       "@typescript-eslint/no-unused-vars": "off",
     },
-  },
-);
+  }
+)

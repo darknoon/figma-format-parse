@@ -36,7 +36,7 @@ export function SiblingPosition({ node, nodes, onSelect }: {
 
   // Fit the sibling range so tightly packed positions remain visible.
   const min = siblings[0]?.position ?? position
-  const max = siblings.at(-1)?.position ?? position
+  const max = siblings[siblings.length - 1]?.position ?? position
   const padding = Math.max(max - min, 0.02) * 0.15
   const start = siblings.length > 1 ? Math.max(0, min - padding) : 0
   const end = siblings.length > 1 ? Math.min(1, max + padding) : 1

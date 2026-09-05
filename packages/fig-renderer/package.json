@@ -1,0 +1,36 @@
+{
+  "name": "fig-renderer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "SVG scene rendering for decoded Figma files, using saved geometry and glyph positions.",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    },
+    "./core": {
+      "types": "./src/core.ts",
+      "import": "./src/core.ts"
+    },
+    "./styles.css": "./src/renderer.css"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test ./tests",
+    "build": "tsc -p tsconfig.build.json && cp src/renderer.css dist/renderer.css"
+  },
+  "dependencies": {
+    "fig-kiwi": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "latest",
+    "typescript": "^6.0.3"
+  }
+}
