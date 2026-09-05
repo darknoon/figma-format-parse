@@ -28,6 +28,7 @@ import { ImagePreview } from "./image-lightbox"
 import { ImageBrowser } from "./image-browser"
 import { imageAssets } from "./image-assets"
 import { indexBlobReferences } from "./blob-references"
+import { SiblingPosition } from "./sibling-position"
 
 type FileContents = ParsedFigmaBlob | ParsedFigmaHTML
 
@@ -50,6 +51,12 @@ export function FigmaFile({ data }: { data: FileContents }) {
   }, [navSelection])
   const node =
     navSelection.type === "layer" && selectedNode(data.message, navSelection)
+  const parentGuid = node && node.parentIndex
+    ? selectedNode(data.message, {
+        type: "layer",
+        guid: node.parentIndex.guid,
+      })?.guid
+    : undefined
   const { message } = data
   const {
     nodeChanges = [],
@@ -151,7 +158,14 @@ export function FigmaFile({ data }: { data: FileContents }) {
             {node && (
               <NodeContent
                 node={node}
+                nodes={data.message.nodeChanges}
                 schema={data.schema}
+                onSelect={(guid) => setNavSelection({ type: "layer", guid })}
+                onOpenParent={
+                  parentGuid
+                    ? () => setNavSelection({ type: "layer", guid: parentGuid })
+                    : undefined
+                }
                 blobReference={
                   navSelection.type === "layer" ? navSelection.blob : undefined
                 }
@@ -437,14 +451,20 @@ function FigmaLink({ href, name }: { href?: string; name?: string }) {
 
 function NodeContent({
   node,
+  nodes,
   schema,
   href,
   blobReference,
+  onOpenParent,
+  onSelect,
 }: {
   node: NodeChange
+  nodes?: NodeChange[]
   schema: Schema
   href?: string
   blobReference?: { index: number; path: string }
+  onOpenParent?: () => void
+  onSelect: (guid: GUID) => void
 }) {
   const compiledSchema: CompiledSchema = useMemo(() => {
     const compiledSchema = compileSchema(schema) as CompiledSchema
@@ -456,13 +476,60 @@ function NodeContent({
     return compiledSchema.encodeNodeChange(node)
   }, [node, compiledSchema])
 
-  const decoded = JSON.stringify(node, replacerForHex, 2)
+  const { name, type, guid, parentIndex, phase, ...properties } = node
+  const decoded = JSON.stringify(properties, replacerForHex, 2)
+  const summary = [
+    { label: "Type", value: type ?? "—" },
+    { label: "GUID", value: guid ? formatGUID(guid) : "—" },
+    { label: "Phase", value: phase ?? "—" },
+    {
+      label: "Parent GUID",
+      value: parentIndex ? (
+        onOpenParent ? (
+          <button
+            type="button"
+            onClick={onOpenParent}
+            aria-label={`Open parent node ${formatGUID(parentIndex.guid)}`}
+            className="inline-flex items-center gap-1 rounded-sm text-left underline underline-offset-2 hover:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2"
+          >
+            {formatGUID(parentIndex.guid)}
+            <svg
+              aria-hidden="true"
+              className="h-4 w-4 shrink-0"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M7 17 17 7M7 7h10v10" />
+            </svg>
+          </button>
+        ) : formatGUID(parentIndex.guid)
+      ) : "None",
+    },
+  ]
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="sticky top-0 z-10 rounded-t-lg border-b bg-card">
         <h2 className="break-words text-lg tracking-tight">
-          {node.name || "no name"}
+          {name || "no name"}
         </h2>
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-3 pt-3 text-sm">
+          {summary.map(({ label, value }) => (
+            <div key={label} className="min-w-0">
+              <dt className="text-xs text-muted-foreground">{label}</dt>
+              <dd className="break-all font-mono">{value}</dd>
+            </div>
+          ))}
+          <div className="min-w-0">
+            <dt className="text-xs text-muted-foreground">Parent position</dt>
+            <dd>
+              <SiblingPosition node={node} nodes={nodes} onSelect={onSelect} />
+            </dd>
+          </div>
+        </dl>
         {blobReference && (
           <p className="text-sm text-muted-foreground">
             Blob {blobReference.index} is referenced at{" "}
@@ -471,8 +538,8 @@ function NodeContent({
         )}
         <FigmaLink href={href} />
       </CardHeader>
-      <CardContent>
-        <h3>As JSON ({decoded.length} bytes)</h3>
+      <CardContent className="pt-6">
+        <h3>Other fields as JSON ({decoded.length} characters)</h3>
         <CodeView>{decoded}</CodeView>
         {data && (
           <>
