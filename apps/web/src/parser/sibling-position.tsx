@@ -4,6 +4,10 @@ import { cn } from "@/lib/utils"
 import { decodePosition } from "./fractional-position"
 import { nodeId } from "./node-tree-data"
 
+function percent(value: number) {
+  return `${Number((value * 100).toPrecision(12))}%`
+}
+
 export function SiblingPosition({ node, nodes, onSelect }: {
   node: NodeChange
   nodes?: NodeChange[]
@@ -40,7 +44,7 @@ export function SiblingPosition({ node, nodes, onSelect }: {
 
   return (
     <div>
-      <div className="w-40 max-w-full px-2" title={`Sibling range: ${Number(start.toPrecision(4))}–${Number(end.toPrecision(4))} · ${siblings.length} nodes`}>
+      <div className="w-40 max-w-full px-2" title={`Sibling range: ${percent(start)}–${percent(end)} · ${siblings.length} nodes`}>
         <div role="group" aria-label="Sibling positions" className="relative h-6">
           <div aria-hidden="true" className="absolute inset-x-0 top-1/2 h-0.5 -translate-y-1/2 rounded-full bg-slate-400" />
           {[0, 25, 50, 75, 100].map((tick) => (
@@ -52,9 +56,9 @@ export function SiblingPosition({ node, nodes, onSelect }: {
               <button
                 key={nodeId(sibling.guid)}
                 type="button"
-                aria-label={`Open sibling ${sibling.name} (${nodeId(sibling.guid)}), position ${Number(sibling.position.toPrecision(12))}`}
+                aria-label={`Open sibling ${sibling.name} (${nodeId(sibling.guid)}), position ${percent(sibling.position)}`}
                 aria-pressed={selected}
-                title={`${sibling.name} (${nodeId(sibling.guid)}) · ≈ ${Number(sibling.position.toPrecision(12))}`}
+                title={`${sibling.name} (${nodeId(sibling.guid)}) · ${percent(sibling.position)}`}
                 onClick={() => onSelect(sibling.guid)}
                 style={{ left: `${(sibling.position - start) / (end - start) * 100}%` }}
                 className={cn(
@@ -72,7 +76,7 @@ export function SiblingPosition({ node, nodes, onSelect }: {
         </div>
       </div>
       <p className="break-all font-mono text-sm" title={`Stored position: ${JSON.stringify(stored)}`}>
-        ≈ {Number(position.toPrecision(12))}
+        {percent(position)}
       </p>
     </div>
   )
