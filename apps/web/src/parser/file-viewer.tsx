@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useMemo } from "react"
+import { useLayoutEffect, useMemo, useRef } from "react"
 
 import { fromByteArray } from "base64-js"
 
@@ -27,11 +27,12 @@ import { compileSchema } from "kiwi-schema"
 import { ImagePreview } from "./image-lightbox"
 import { ImageBrowser } from "./image-browser"
 import { imageAssets } from "./image-assets"
+import { indexBlobReferences } from "./blob-references"
 
 type FileContents = ParsedFigmaBlob | ParsedFigmaHTML
 
 type NavSelection =
-  | { type: "layer"; guid: GUID }
+  | { type: "layer"; guid: GUID; blob?: { index: number; path: string } }
   | { type: "preview" }
   | { type: "meta" }
   | { type: "misc" }
@@ -43,6 +44,10 @@ export function FigmaFile({ data }: { data: FileContents }) {
   const [navSelection, setNavSelection] = useState<NavSelection>(() => ({
     type: "meta" in data ? "meta" : data.preview ? "preview" : "misc",
   }))
+  const content = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    content.current?.scrollTo({ top: 0, left: 0 })
+  }, [navSelection])
   const node =
     navSelection.type === "layer" && selectedNode(data.message, navSelection)
   const { message } = data
@@ -79,7 +84,7 @@ export function FigmaFile({ data }: { data: FileContents }) {
         />
       </nav>
       <div className="min-w-0 flex-1">
-        <div className="h-full overflow-y-auto">
+        <div ref={content} className="h-full overflow-y-auto">
           <div className="p-4 sm:p-8">
             {navSelection.type === "meta" && "meta" in data && (
               <FigmaPasteInfo
@@ -131,7 +136,15 @@ export function FigmaFile({ data }: { data: FileContents }) {
                 </Card>
               )}
 
-            {navSelection.type === "blobs" && blobs && <Blobs blobs={blobs} />}
+            {navSelection.type === "blobs" && blobs && (
+              <Blobs
+                message={message}
+                schema={data.schema}
+                onSelect={(guid, index, path) =>
+                  setNavSelection({ type: "layer", guid, blob: { index, path } })
+                }
+              />
+            )}
             {navSelection.type === "images" && imageEntries && (
               <ImageBrowser assets={assets} />
             )}
@@ -139,6 +152,9 @@ export function FigmaFile({ data }: { data: FileContents }) {
               <NodeContent
                 node={node}
                 schema={data.schema}
+                blobReference={
+                  navSelection.type === "layer" ? navSelection.blob : undefined
+                }
                 href={
                   "meta" in data
                     ? figmaUrl(data.meta.fileKey, node.guid!)
@@ -153,16 +169,60 @@ export function FigmaFile({ data }: { data: FileContents }) {
   )
 }
 
-function Blobs({ blobs }: { blobs: Exclude<Message["blobs"], undefined> }) {
+function Blobs({ message, schema, onSelect }: {
+  message: Message
+  schema: Schema
+  onSelect: (guid: GUID, blob: number, path: string) => void
+}) {
+  const references = useMemo(
+    () => indexBlobReferences(message, schema),
+    [message, schema]
+  )
   return (
     <div className="flex flex-col space-y-4">
-      {blobs.map((b, i) => (
+      {message.blobs?.map((b, i) => (
         <Card key={i}>
           <CardHeader>
             <h2>
               Blob {i}{" "}
               <span className="font-medium">({b.bytes.length} bytes)</span>
             </h2>
+            {references.has(i) ? (
+              <div className="space-y-1 text-sm">
+                <p className="text-muted-foreground">Referenced by</p>
+                <ul className="space-y-1">
+                  {references.get(i)!.map((reference) => (
+                    <li key={`${reference.nodeIndex}:${reference.path}`}>
+                      {reference.guid ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onSelect(reference.guid!, i, reference.path)
+                          }
+                          className="flex max-w-full flex-wrap items-baseline gap-x-2 rounded-sm text-left underline underline-offset-2 hover:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2"
+                        >
+                          <span>
+                            {reference.nodeName} ({formatGUID(reference.guid)})
+                          </span>
+                          <code className="break-all text-xs">
+                            {reference.path}
+                          </code>
+                        </button>
+                      ) : (
+                        <span className="break-all text-muted-foreground">
+                          {reference.nodeName} · nodeChanges[{reference.nodeIndex}].
+                          {reference.path}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No node references found.
+              </p>
+            )}
           </CardHeader>
           <CardContent>
             <span className="font-mono font-xs text-gray-700 dark:text-gray-400">
@@ -379,10 +439,12 @@ function NodeContent({
   node,
   schema,
   href,
+  blobReference,
 }: {
   node: NodeChange
   schema: Schema
   href?: string
+  blobReference?: { index: number; path: string }
 }) {
   const compiledSchema: CompiledSchema = useMemo(() => {
     const compiledSchema = compileSchema(schema) as CompiledSchema
@@ -398,6 +460,15 @@ function NodeContent({
   return (
     <Card>
       <CardHeader>
+        <h2 className="break-words text-lg tracking-tight">
+          {node.name || "no name"}
+        </h2>
+        {blobReference && (
+          <p className="text-sm text-muted-foreground">
+            Blob {blobReference.index} is referenced at{" "}
+            <code className="break-all">{blobReference.path}</code>.
+          </p>
+        )}
         <FigmaLink href={href} />
       </CardHeader>
       <CardContent>

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react"
+import { useLayoutEffect, useMemo, useRef, useState } from "react"
 import type { GUID, NodeChange } from "fig-kiwi/schema-defs"
 import { cn } from "@/lib/utils"
 import { TypePill } from "./type-pill"
@@ -36,6 +36,29 @@ export function NodeTree({
     [tree, expanded]
   )
   const selectedId = selected && nodeId(selected)
+
+  // Backlinks can select a node inside a collapsed branch.
+  useLayoutEffect(() => {
+    if (!selectedId) return
+    setExpanded((previous) => {
+      const next = new Set(previous)
+      let parentId = tree.byId.get(selectedId)?.parentId
+      while (parentId) {
+        next.add(parentId)
+        parentId = tree.byId.get(parentId)?.parentId
+      }
+      return next.size === previous.size ? previous : next
+    })
+    setFocused(selectedId)
+  }, [selectedId, tree])
+
+  useLayoutEffect(() => {
+    if (!selectedId) return
+    const element = elements.current.get(selectedId)
+    element?.focus({ preventScroll: true })
+    element?.scrollIntoView({ block: "nearest", inline: "nearest" })
+  }, [selectedId, rows])
+
   const tabStop =
     rows.find(({ item }) => item.id === focused)?.item.id ?? rows[0]?.item.id
 
