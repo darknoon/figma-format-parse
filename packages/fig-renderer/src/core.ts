@@ -12,3 +12,5 @@ export type {
   NetworkSegment,
   NetworkRegion,
 } from "./geometry"
+export { commandByteRanges, networkByteRanges } from "./blob-ranges"
+export type { BlobByteRange } from "./blob-ranges"

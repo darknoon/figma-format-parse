@@ -1,12 +1,21 @@
 import { useEffect, useState } from "react"
+import type { GUID } from "fig-kiwi/schema-defs"
+import { NodeReferenceLink } from "./node-reference-link"
 import type { FigmaImageEntry } from "fig-kiwi/blob"
 import { Input } from "@/components/ui/input"
 import { ImageLightbox } from "./image-lightbox"
+import { ReferenceCount } from "./reference-count"
 import { readThumbnails, type ImageAsset } from "./image-assets"
 import { cn } from "@/lib/utils"
 import { assetCardClassName, assetGridClassName } from "./asset-gallery"
 
-export function ImageBrowser({ assets }: { assets: ImageAsset[] }) {
+export function ImageBrowser({
+  assets,
+  onSelect,
+}: {
+  assets: ImageAsset[]
+  onSelect: (guid: GUID) => void
+}) {
   const [query, setQuery] = useState("")
   const [selected, setSelected] = useState<ImageAsset | null>(null)
   const [thumbnails, setThumbnails] = useState<Map<string, string | null>>(
@@ -61,7 +70,7 @@ export function ImageBrowser({ assets }: { assets: ImageAsset[] }) {
               onClick={() => setSelected(asset)}
               className={cn(
                 assetCardClassName,
-                "group flex h-full w-full cursor-zoom-in flex-col gap-2 text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+                "group flex h-full w-full cursor-pointer flex-col gap-2 text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
               )}
             >
               <span className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-md bg-muted/40 transition-opacity group-hover:opacity-85">
@@ -90,8 +99,9 @@ export function ImageBrowser({ assets }: { assets: ImageAsset[] }) {
                 <span className="line-clamp-2 min-h-10 break-words text-sm leading-5">
                   {asset.name}
                 </span>
-                <span className="block text-sm text-muted-foreground">
-                  {formatSize(asset.entry.size)}
+                <span className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
+                  <span>{formatSize(asset.entry.size)}</span>
+                  <ReferenceCount count={asset.references?.length ?? 0} />
                 </span>
               </span>
             </button>
@@ -104,7 +114,35 @@ export function ImageBrowser({ assets }: { assets: ImageAsset[] }) {
         </p>
       )}
       {selected && (
-        <ImageLightbox title={selected.name} onClose={() => setSelected(null)}>
+        <ImageLightbox
+          title={selected.name}
+          onClose={() => setSelected(null)}
+          footer={
+            selected.references?.length ? (
+              <div className="flex items-baseline gap-3 text-sm">
+                <span className="font-medium">Uses</span>
+                <ul className="flex flex-wrap gap-x-3 gap-y-1">
+                  {selected.references.map((reference) => (
+                    <li key={reference.nodeIndex}>
+                      {reference.guid ? (
+                        <NodeReferenceLink
+                          guid={reference.guid}
+                          title={reference.name}
+                          onSelect={() => {
+                            setSelected(null)
+                            onSelect(reference.guid!)
+                          }}
+                        />
+                      ) : (
+                        <span>nodeChanges[{reference.nodeIndex}]</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : undefined
+          }
+        >
           <SelectedImage
             key={selected.entry.name}
             entry={selected.entry}

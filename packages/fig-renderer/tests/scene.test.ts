@@ -1,3 +1,4 @@
+import { commandByteRanges, networkByteRanges } from "../src/blob-ranges"
 import { describe, expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { readFigFile } from "fig-kiwi"
@@ -195,6 +196,20 @@ describe("stored geometry", () => {
     expect(inspected.regions).toEqual([
       { offset: 132, flags: 1, loops: [{ offset: 140, segments: [0, 2, 1] }] },
     ])
+    const ranges = networkByteRanges(inspected)
+    expect(ranges.map((r) => r.offset)).toEqual(
+      Array.from({ length: bytes.length / 4 }, (_, i) => i * 4)
+    )
+    expect(ranges.every((r) => r.byteLength === 4)).toBe(true)
+    expect(ranges.find((r) => r.offset === 12)?.description).toBe("270544960")
+    expect(ranges.find((r) => r.offset === 56)).toMatchObject({
+      label: "Segment 0 · start tangent X",
+      description: "10",
+    })
+    expect(ranges.at(-1)).toMatchObject({
+      label: "Region 0 · loop 0 · segment 2",
+      description: "1",
+    })
     expect(inspectVectorNetwork(new Uint8Array([...bytes, 0]))).toBeUndefined()
     expect(decodeVectorNetwork(bytes.slice(0, -1))).toBeUndefined()
     view.setUint32(12 + 3 * 12 + 4, 99, true)
@@ -283,5 +298,23 @@ describe("scene layout and camera", () => {
     )
     expect(zoomCamera(camera, 1e20, 0, 0).zoom).toBe(256)
     expect(zoomCamera(camera, 1e-20, 0, 0).zoom).toBe(0.001)
+  })
+})
+
+test("byte annotations retain opcode boundaries and decoded operands", () => {
+  const decoded = inspectCommands(
+    commands([0], [1, 2, 3], [3, 4, 5, 6, 7], [4, 1, 2, 3, 4, 5, 6], [0])
+  )!
+  const ranges = commandByteRanges(decoded)
+  expect(ranges.map((r) => [r.offset, r.byteLength])).toEqual([
+    [0, 1],
+    [1, 9],
+    [10, 17],
+    [27, 25],
+    [52, 1],
+  ])
+  expect(ranges[2]).toMatchObject({
+    label: "Quadratic · opcode 3",
+    description: "Control (4, 5) → end (6, 7)",
   })
 })

@@ -4,6 +4,9 @@ import type { GUID } from "fig-kiwi/schema-defs"
 import type { BlobReference } from "./blob-references"
 import { HexView } from "./hex-view"
 import { ImageLightbox } from "./image-lightbox"
+import { TypePill } from "./type-pill"
+import { ReferenceCount } from "./reference-count"
+import { NodeReferenceLink } from "./node-reference-link"
 
 export function BlobContent({
   bytes,
@@ -23,14 +26,15 @@ export function BlobContent({
   return (
     <BlobInspector
       bytes={bytes}
-      renderBytes={(data) => <HexView bytes={data} />}
+      renderType={(type) => <TypePill type={type} />}
+      renderBytes={(data, ranges) => <HexView bytes={data} ranges={ranges} />}
       renderDetails={(content, onClose) => (
         <ImageLightbox
           title={`Blob ${index} details`}
           closeLabel="Close blob"
           onClose={onClose}
         >
-          <div className="max-h-[calc(100dvh-4rem)] w-[min(64rem,calc(100vw-4rem))] overflow-auto p-6">
+          <div className="max-h-[calc(100dvh-4rem)] w-[min(48rem,calc(100vw-4rem))] overflow-auto p-6">
             {content}
           </div>
         </ImageLightbox>
@@ -51,24 +55,26 @@ export function BlobContent({
           </span>
         </>
       }
-      references={(expanded) => (
+      referenceCount={
+        <ReferenceCount
+          count={new Set(references.map((r) => r.nodeIndex)).size}
+        />
+      }
+      references={
         <BlobUsage
           references={references}
-          expanded={expanded}
           onSelect={(r) => r.guid && onSelect(r.guid, index, r.path)}
         />
-      )}
+      }
     />
   )
 }
 
 function BlobUsage({
   references,
-  expanded,
   onSelect,
 }: {
   references: BlobReference[]
-  expanded: boolean
   onSelect: (reference: BlobReference) => void
 }) {
   const groups = useMemo(() => {
@@ -81,50 +87,30 @@ function BlobUsage({
     return [...nodes.values()]
   }, [references])
   if (!groups.length) return null
-  const visible = expanded ? groups : groups.slice(0, 3)
   return (
-    <ul className="flex flex-wrap gap-x-2 text-sm leading-5">
-      {visible.map((group) => {
-        const first = group[0]
-        const label = first.guid
-          ? `${first.guid.sessionID}:${first.guid.localID}`
-          : `nodeChanges[${first.nodeIndex}]`
-        return (
-          <li key={first.nodeIndex} className="min-w-0">
-            {first.guid ? (
-              <button
-                className="inline-flex max-w-full items-center gap-1 text-left text-blue-700 hover:underline"
-                title={`${first.nodeName} (${label})\n${group.map((r) => r.path).join("\n")}`}
-                onClick={() => onSelect(first)}
-              >
-                <span className="truncate">{label}</span>
-                <svg
-                  aria-hidden="true"
-                  className="h-3 w-3 shrink-0"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M7 17 17 7M7 7h10v10" />
-                </svg>
-              </button>
-            ) : (
-              label
-            )}
-          </li>
-        )
-      })}
-      {!expanded && groups.length > visible.length && (
-        <li
-          className="text-muted-foreground"
-          title="More references in details"
-        >
-          +{groups.length - visible.length}
-        </li>
-      )}
-    </ul>
+    <div>
+      <h3 className="mb-1 text-sm font-medium">Uses</h3>
+      <ul className="flex flex-wrap gap-x-2 text-sm leading-5">
+        {groups.map((group) => {
+          const first = group[0]
+          const label = first.guid
+            ? `${first.guid.sessionID}:${first.guid.localID}`
+            : `nodeChanges[${first.nodeIndex}]`
+          return (
+            <li key={first.nodeIndex} className="min-w-0">
+              {first.guid ? (
+                <NodeReferenceLink
+                  guid={first.guid}
+                  title={`${first.nodeName} (${label})\n${group.map((r) => r.path).join("\n")}`}
+                  onSelect={() => onSelect(first)}
+                />
+              ) : (
+                label
+              )}
+            </li>
+          )
+        })}
+      </ul>
+    </div>
   )
 }

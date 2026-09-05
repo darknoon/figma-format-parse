@@ -14,7 +14,7 @@
   padding: 0;
 }
 .fig-blob__references {
-  height: 40px;
+  max-height: 160px;
   overflow: auto;
   margin-bottom: 4px;
 }
@@ -25,7 +25,8 @@
   overflow: hidden;
   gap: 4px 8px;
 }
-.fig-blob__heading span {
+.fig-blob__heading {
+  justify-content: space-between;
   color: #6b7280;
   font-size: 14px;
 }
@@ -33,10 +34,9 @@
   position: relative;
   min-width: 0;
   border-radius: 6px;
-  background: color-mix(in oklab, var(--muted, #f1f5f9) 40%, transparent);
   overflow: hidden;
 }
-.fig-blob__geometry svg {
+.fig-blob__geometry > svg {
   display: block;
   width: 100%;
   height: auto;
@@ -52,6 +52,17 @@
   font-size: 14px;
   pointer-events: none;
 }
+.fig-blob__type-label {
+  display: block;
+  width: 48px;
+  padding: 2px 4px;
+  border-radius: 6px;
+  background: #e5e7eb;
+  color: #1f2937;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+}
 .fig-blob__placeholder {
   display: grid;
   place-items: center;
@@ -60,54 +71,50 @@
   color: #9ca3af;
 }
 .fig-blob > .fig-blob__placeholder {
-  padding-bottom: 73px;
+  padding-bottom: 29px;
   box-sizing: content-box;
 }
 .fig-blob__preview-controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 8px;
-  padding: 36px 8px 8px;
-  font-size: 14px;
-  color: #6b7280;
-}
-.fig-blob__preview-controls label {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  right: 8px;
   display: flex;
   align-items: center;
-  gap: 4px;
-  cursor: pointer;
+  gap: 8px;
 }
-.fig-blob__detail-panel {
-  margin-top: 16px;
-}
-.fig-blob__views {
+.fig-blob__preview-controls button {
   display: flex;
-  gap: 4px;
-  margin-bottom: 16px;
-}
-.fig-blob__views button {
-  padding: 4px 10px;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 4px 6px;
   border: 0;
   border-radius: 4px;
-  background: transparent;
+  background: var(--card, white);
   color: #6b7280;
   font: inherit;
   cursor: pointer;
 }
-.fig-blob__views button[aria-pressed="true"] {
-  background: #e5e7eb;
-  color: #111827;
+.fig-blob__preview-controls button:hover,
+.fig-blob__preview-controls button[aria-pressed="true"] {
+  background: #dbeafe;
+  color: #2563eb;
+}
+.fig-blob__copy {
+  margin-left: auto;
+}
+.fig-blob__detail-panel {
+  margin-top: 16px;
 }
 .fig-blob--expanded .fig-blob__overview {
-  grid-template-columns: minmax(180px, 40%) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
 }
-.fig-blob--expanded .fig-blob__geometry svg {
-  height: 220px;
+.fig-blob--expanded .fig-blob__geometry > svg {
+  height: min(360px, 42dvh);
+  padding-bottom: 44px;
   aspect-ratio: auto;
-}
-.fig-blob--expanded .fig-blob__references {
-  height: auto;
-  max-height: 160px;
 }
 .fig-blob button:focus-visible {
   outline: 2px solid #2563eb;
@@ -117,78 +124,11 @@
   margin: 0 0 12px;
   color: #6b7280;
 }
-.fig-blob__pager {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px 16px;
-}
 @media (max-width: 600px) {
   .fig-blob--expanded .fig-blob__overview {
     grid-template-columns: minmax(0, 1fr);
   }
 }
-.fig-blob__records {
-  margin: 16px 0;
-}
-.fig-blob__table-scroll {
-  max-height: 400px;
-  overflow: auto;
-}
-.fig-blob__table {
-  width: 100%;
-  border-collapse: collapse;
-  font-variant-numeric: tabular-nums;
-  text-align: left;
-}
-.fig-blob__table caption {
-  padding: 0 0 8px;
-  font-weight: 600;
-  text-align: left;
-}
-.fig-blob__table th,
-.fig-blob__table td {
-  padding: 6px 10px;
-  border-bottom: 1px solid #e5e7eb;
-  white-space: nowrap;
-  vertical-align: top;
-}
-.fig-blob__table th {
-  font-size: 14px;
-  font-weight: 500;
-  color: #6b7280;
-}
-.fig-blob__table td {
-  font-family: ui-monospace, SFMono-Regular, monospace;
-  font-size: 12px;
-}
-.fig-blob__indices {
-  display: block;
-  min-width: 220px;
-  max-width: 600px;
-  white-space: normal;
-}
-.fig-blob__pager {
-  margin-top: 8px;
-}
-.fig-blob__pager span {
-  margin-right: auto;
-  color: #6b7280;
-}
-.fig-blob__pager button {
-  padding: 4px 8px;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}
-.fig-blob__pager button:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
 .fig-blob__open {
   display: block;
   width: 100%;
@@ -196,9 +136,21 @@
   border: 0;
   border-radius: 6px;
   background: transparent;
-  cursor: zoom-in;
+  cursor: pointer;
   font: inherit;
 }
 .fig-blob__open:hover {
   opacity: 0.85;
+}
+
+.fig-blob__detail-panel > summary {
+  cursor: pointer;
+  padding: 4px 0;
+}
+.fig-blob__byte-size {
+  margin-left: 8px;
+  color: #6b7280;
+}
+.fig-blob__bytes {
+  margin-top: 12px;
 }

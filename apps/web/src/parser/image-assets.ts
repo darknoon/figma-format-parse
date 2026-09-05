@@ -1,10 +1,18 @@
 import type { Message } from "fig-kiwi"
+import type { GUID } from "fig-kiwi/schema-defs"
 import type { FigmaImageEntry } from "fig-kiwi/blob"
 import { hex } from "./hex"
+
+export interface ImageReference {
+  nodeIndex: number
+  guid?: GUID
+  name?: string
+}
 
 export interface ImageAsset {
   entry: FigmaImageEntry
   name: string
+  references?: ImageReference[]
   thumbnail?: FigmaImageEntry
 }
 
@@ -15,11 +23,12 @@ export function imageAssets(
 ): ImageAsset[] {
   const byName = new Map(entries.map((entry) => [entry.name, entry]))
   const names = new Map<string, string>()
+  const uses = new Map<string, Map<number, ImageReference>>()
   const originals = new Set<string>()
   const thumbnails = new Set<string>()
   const pairedThumbnails = new Set<string>()
   const previewFor = new Map<string, FigmaImageEntry>()
-  for (const node of message.nodeChanges ?? []) {
+  for (const [nodeIndex, node] of (message.nodeChanges ?? []).entries()) {
     for (const paint of [
       ...(node.fillPaints ?? []),
       ...(node.strokePaints ?? []),
@@ -29,6 +38,12 @@ export function imageAssets(
         paint.animatedImage,
         paint.imageThumbnail,
       ]) {
+        if (image?.hash) {
+          const id = hex(image.hash)
+          const nodes = uses.get(id) ?? new Map<number, ImageReference>()
+          nodes.set(nodeIndex, { nodeIndex, guid: node.guid, name: node.name })
+          uses.set(id, nodes)
+        }
         if (
           image?.hash &&
           (image.name || node.name) &&
@@ -59,6 +74,7 @@ export function imageAssets(
     )
     .map((entry) => ({
       entry,
+      references: [...(uses.get(entry.name)?.values() ?? [])],
       name: names.get(entry.name) ?? entry.name,
       thumbnail:
         previewFor.get(entry.name) ??

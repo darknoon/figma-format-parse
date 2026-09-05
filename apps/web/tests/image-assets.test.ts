@@ -31,7 +31,12 @@ test("pairs by hash, displaying one card whose click target is the original", ()
   const original = entry(1)
   const thumbnail = entry(2)
   expect(imageAssets([thumbnail, original], message(1, 2))).toEqual([
-    { entry: original, name: "Image name", thumbnail },
+    {
+      entry: original,
+      name: "Image name",
+      thumbnail,
+      references: [{ nodeIndex: 0, name: "Layer name", guid: undefined }],
+    },
   ])
 })
 
@@ -116,7 +121,12 @@ test("a failed thumbnail never falls back to loading the original", async () => 
 test("retains standalone thumbnails but does not auto-load an original that references itself", () => {
   const thumbnail = entry(2)
   expect(imageAssets([thumbnail], message(1, 2))).toEqual([
-    { entry: thumbnail, name: "Layer name", thumbnail },
+    {
+      entry: thumbnail,
+      name: "Layer name",
+      thumbnail,
+      references: [{ nodeIndex: 0, name: "Layer name", guid: undefined }],
+    },
   ])
   expect(imageAssets([entry(1)], message(1, 1))[0].thumbnail).toBeUndefined()
 })
@@ -144,4 +154,27 @@ test("limits concurrent reads and abandons queued thumbnails when the view close
   await reading
   expect(pending).toHaveLength(4)
   expect(loaded).toBe(0)
+})
+
+test("counts referencing nodes once across fills, strokes, and thumbnail aliases", () => {
+  const paints = message(1, 1).nodeChanges![0].fillPaints
+  const assets = imageAssets([entry(1), entry(2)], {
+    nodeChanges: [
+      { fillPaints: paints, strokePaints: paints },
+      { fillPaints: paints },
+    ],
+  })
+  expect(assets.map((asset) => asset.references?.length)).toEqual([2, 0])
+  const referenced = imageAssets([entry(1)], {
+    nodeChanges: [
+      {
+        guid: { sessionID: 3, localID: 4 },
+        name: "Picture",
+        fillPaints: paints,
+      },
+    ],
+  })
+  expect(referenced[0].references).toEqual([
+    { nodeIndex: 0, guid: { sessionID: 3, localID: 4 }, name: "Picture" },
+  ])
 })

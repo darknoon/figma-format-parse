@@ -183,7 +183,13 @@ export function FigmaFile({ data }: { data: FileContents }) {
               />
             )}
             {navSelection.type === "images" && imageEntries && (
-              <ImageBrowser assets={assets} />
+              <ImageBrowser
+                assets={assets}
+                onSelect={(guid) => {
+                  setSceneSelection(guid)
+                  setNavSelection({ type: "layer", guid })
+                }}
+              />
             )}
             {node && (
               <NodeContent

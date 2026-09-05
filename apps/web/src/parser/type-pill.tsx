@@ -38,6 +38,10 @@ import type { NodeType } from "fig-kiwi/schema-defs"
 
 export function abbreviateType(type: string) {
   switch (type) {
+    case "PATH":
+    case "NET":
+    case "GLYPH":
+      return type
     case "DOCUMENT":
       return "DOCU"
     case "CANVAS":
@@ -98,7 +102,7 @@ export function abbreviateType(type: string) {
 }
 
 function colorType(type: string): string {
-  switch (type as NodeType) {
+  switch (type as NodeType | "PATH" | "NET" | "GLYPH") {
     case "DOCUMENT":
       return "bg-gray-100 text-gray-800" // light grey
     case "CANVAS":
@@ -109,6 +113,8 @@ function colorType(type: string): string {
       return "bg-blue-200 text-blue-800" // light blue
     case "BOOLEAN_OPERATION":
       return "bg-purple-200 text-purple-800" // light purple
+    case "PATH":
+    case "NET":
     case "VECTOR":
       return "bg-green-200 text-green-800" // light green
     case "STAR":
@@ -123,6 +129,7 @@ function colorType(type: string): string {
       return "bg-orange-200 text-orange-800" // light orange
     case "ROUNDED_RECTANGLE":
       return "bg-gray-400 text-gray-800" // grey
+    case "GLYPH":
     case "TEXT":
       return "bg-yellow-400 text-yellow-800" // yellow
     case "SLICE":
