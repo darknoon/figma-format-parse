@@ -22,7 +22,7 @@ export function SelectionCard({ node, assets = [], onSeeAll }: { node: NodeChang
     <aside
       aria-label="Selected node"
       tabIndex={0}
-      className="group absolute right-4 top-4 z-10 w-72 max-w-[calc(100%-2rem)] rounded-xl border bg-card/95 px-3 py-2 text-sm shadow-sm backdrop-blur-sm focus-visible:outline-2 focus-visible:outline-blue-400"
+      className="group absolute right-4 top-4 z-10 w-60 hover:w-66 focus-within:w-66 transition-[width] duration-150 motion-reduce:transition-none max-w-[calc(100%-2rem)] rounded-xl border bg-card/95 px-3 py-2 text-sm shadow-sm backdrop-blur-sm focus-visible:outline-2 focus-visible:outline-blue-400"
     >
       <dl className="space-y-1 text-xs">
         <div className="flex items-center justify-between gap-6">
