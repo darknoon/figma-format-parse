@@ -30,6 +30,11 @@ Shift+2 fits the selection while the canvas has keyboard focus.
 The host decides whether a tree click previews a node or opens its property data.
 There is no separate inspect mode in the renderer.
 
+`onHover` reports the node under the canvas pointer independently of selection.
+Hover draws a temporary outline and clears when the pointer leaves, the camera
+moves, or the preview closes. The app mirrors it on the matching tree row, or its
+nearest visible ancestor inside a collapsed branch, without moving keyboard focus.
+
 `fig-renderer/core` exports the pure scene builder, hierarchy, camera helpers, and
 binary geometry decoders. It imports neither React nor CSS and works in non-browser
 tests. `buildNodeTree` is shared with the web app so sibling ordering and parent links

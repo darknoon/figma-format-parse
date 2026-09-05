@@ -7,16 +7,19 @@ import {
   nodeId,
   treeKeyAction,
   visibleTreeRows,
+  visibleHoverId,
 } from "./node-tree-data"
 
 export function NodeTree({
   nodes,
   selected,
+  hovered,
   onSelect,
   focusSelection = true,
 }: {
   nodes: NodeChange[]
   selected?: GUID
+  hovered?: GUID
   focusSelection?: boolean
   onSelect: (guid: GUID) => void
 }) {
@@ -38,6 +41,15 @@ export function NodeTree({
     [tree, expanded]
   )
   const selectedId = selected && nodeId(selected)
+  const visibleIds = useMemo(
+    () => new Set(rows.map(({ item }) => item.id)),
+    [rows]
+  )
+  const hoveredId = visibleHoverId(
+    hovered && nodeId(hovered),
+    tree.byId,
+    visibleIds
+  )
 
   // Backlinks can select a node inside a collapsed branch.
   useLayoutEffect(() => {
@@ -108,6 +120,7 @@ export function NodeTree({
             aria-setsize={siblings}
             aria-expanded={hasChildren ? open : undefined}
             aria-selected={item.id === selectedId}
+            data-hovered={item.id === hoveredId ? "true" : undefined}
             tabIndex={item.id === tabStop ? 0 : -1}
             onFocus={() => setFocused(item.id)}
             onClick={() => focusNode(item.id)}
@@ -130,7 +143,8 @@ export function NodeTree({
             className={cn(
               "flex min-w-0 cursor-default items-center rounded-sm py-1 pr-2 hover:bg-gray-200 dark:hover:bg-gray-800 focus-visible:outline-2 focus-visible:-outline-offset-2",
               item.id === selectedId &&
-                "bg-gray-200 text-foreground dark:bg-gray-800"
+                "bg-gray-200 text-foreground dark:bg-gray-800",
+              item.id === hoveredId && "ring-1 ring-inset ring-blue-500"
             )}
           >
             {hasChildren ? (

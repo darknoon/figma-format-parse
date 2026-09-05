@@ -4,6 +4,7 @@ import {
   buildNodeTree,
   treeKeyAction,
   visibleTreeRows,
+  visibleHoverId,
 } from "../src/parser/node-tree-data"
 
 function node(id: number, parent?: number, position = "!"): NodeChange {
@@ -110,5 +111,27 @@ describe("tree navigation", () => {
     expect(action("0:0", "End")).toEqual({ type: "focus", id: "0:3" })
     expect(action("0:0", "Tab")).toBeUndefined()
     expect(treeKeyAction([], expanded, "0:0", "ArrowDown")).toBeUndefined()
+  })
+})
+
+describe("canvas hover in the tree", () => {
+  const tree = buildNodeTree([node(0), node(1, 0), node(2, 1), node(3, 2)])
+  const visible = (expanded: Set<string>) =>
+    new Set(visibleTreeRows(tree.roots, expanded).map(({ item }) => item.id))
+
+  test("highlights the nearest visible ancestor without expanding the tree", () => {
+    const expanded = new Set(["0:0", "0:1"])
+    expect(visibleHoverId("0:3", tree.byId, visible(expanded))).toBe("0:2")
+    expect([...expanded]).toEqual(["0:0", "0:1"])
+    expect(visibleHoverId("0:3", tree.byId, visible(new Set(["0:0"])))).toBe(
+      "0:1"
+    )
+  })
+
+  test("uses the hovered row when visible and clears missing or absent hover", () => {
+    const ids = visible(new Set(tree.byId.keys()))
+    expect(visibleHoverId("0:3", tree.byId, ids)).toBe("0:3")
+    expect(visibleHoverId(undefined, tree.byId, ids)).toBeUndefined()
+    expect(visibleHoverId("9:9", tree.byId, ids)).toBeUndefined()
   })
 })

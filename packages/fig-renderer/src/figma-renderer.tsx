@@ -32,6 +32,8 @@ export interface FigmaRendererProps {
   /** Increment to reveal the selected node, e.g. after a tree click. */
   focusRequest?: number
   onSelect?: (guid?: GUID) => void
+  /** Reports the layer under the pointer independently of selection. */
+  onHover?: (guid?: GUID) => void
 }
 
 export function FigmaRenderer({
@@ -40,6 +42,7 @@ export function FigmaRenderer({
   selected,
   focusRequest = 0,
   onSelect,
+  onHover,
 }: FigmaRendererProps) {
   const scene = useMemo(() => buildScene(message), [message])
   const [pageId, setPageId] = useState(
@@ -70,6 +73,22 @@ export function FigmaRenderer({
   const prefix = useId().replace(/:/g, "")
   const selectedId = selected && nodeId(selected)
   const selectedItem = selectedId ? scene.byId.get(selectedId) : undefined
+  const [hoveredId, setHoveredId] = useState<string>()
+  const hoverId = useRef<string | undefined>(undefined)
+  const hoveredItem = hoveredId ? scene.byId.get(hoveredId) : undefined
+  const updateHover = useCallback(
+    (id?: string) => {
+      if (hoverId.current === id) return
+      hoverId.current = id
+      setHoveredId(id)
+      onHover?.(id ? scene.byId.get(id)?.node.guid : undefined)
+    },
+    [onHover, scene]
+  )
+  useEffect(() => {
+    updateHover()
+    return () => onHover?.(undefined)
+  }, [pageId, updateHover, onHover])
   const viewport = useRef<HTMLDivElement>(null)
   const cameraGroup = useRef<SVGGElement>(null)
   const camera = useRef<Camera>({ x: 0, y: 0, zoom: 1 })
@@ -105,19 +124,23 @@ export function FigmaRenderer({
     }
   }, [zoomMenuOpen])
 
-  const moveCamera = useCallback((next: Camera) => {
-    camera.current = next
-    if (frame.current) return
-    frame.current = requestAnimationFrame(() => {
-      frame.current = 0
-      const c = camera.current
-      cameraGroup.current?.setAttribute(
-        "transform",
-        `translate(${c.x} ${c.y}) scale(${c.zoom})`
-      )
-      setZoom(c.zoom)
-    })
-  }, [])
+  const moveCamera = useCallback(
+    (next: Camera) => {
+      updateHover()
+      camera.current = next
+      if (frame.current) return
+      frame.current = requestAnimationFrame(() => {
+        frame.current = 0
+        const c = camera.current
+        cameraGroup.current?.setAttribute(
+          "transform",
+          `translate(${c.x} ${c.y}) scale(${c.zoom})`
+        )
+        setZoom(c.zoom)
+      })
+    },
+    [updateHover]
+  )
 
   const fit = useCallback(
     (selection = false) => {
@@ -193,6 +216,7 @@ export function FigmaRenderer({
       space.current = false
       drag.current = undefined
       setPanning(false)
+      updateHover()
     }
     element.addEventListener("wheel", wheel, { passive: false })
     window.addEventListener("blur", release)
@@ -202,7 +226,7 @@ export function FigmaRenderer({
       cancelAnimationFrame(frame.current)
       frame.current = 0
     }
-  }, [moveCamera])
+  }, [moveCamera, updateHover])
 
   const zoomAtCenter = (factor: number) =>
     moveCamera(
@@ -307,6 +331,7 @@ export function FigmaRenderer({
         }}
         onPointerDown={(event) => {
           if (event.button === 1 || (event.button === 0 && space.current)) {
+            updateHover()
             event.preventDefault()
             event.currentTarget.focus({ preventScroll: true })
             event.currentTarget.setPointerCapture(event.pointerId)
@@ -334,7 +359,16 @@ export function FigmaRenderer({
               x: d.origin.x + event.clientX - d.x,
               y: d.origin.y + event.clientY - d.y,
             })
+          else if (!d && event.pointerType !== "touch") {
+            const target = event.target as Element
+            updateHover(
+              target
+                .closest("[data-scene-node]")
+                ?.getAttribute("data-scene-node") ?? undefined
+            )
+          }
         }}
+        onPointerLeave={() => updateHover()}
         onPointerUp={(event) => {
           if (drag.current?.pointer === event.pointerId) {
             drag.current = undefined
@@ -343,6 +377,7 @@ export function FigmaRenderer({
           }
         }}
         onPointerCancel={() => {
+          updateHover()
           drag.current = undefined
           setPanning(false)
         }}
@@ -383,6 +418,25 @@ export function FigmaRenderer({
               images={images}
               prefix={prefix}
             />
+            {hoveredItem?.visible &&
+              hoveredId !== selectedId &&
+              hoveredItem.pageId === pageId &&
+              hoveredItem.node.size && (
+                <g
+                  data-hovered-node={hoveredId}
+                  pointerEvents="none"
+                  transform={svgMatrix(hoveredItem.world)}
+                >
+                  <rect
+                    width={hoveredItem.node.size.x}
+                    height={hoveredItem.node.size.y}
+                    fill="none"
+                    stroke="#2563eb"
+                    strokeWidth={1}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                </g>
+              )}
             {selectedItem?.visible &&
               selectedItem.pageId === pageId &&
               selectedItem.node.size && (

@@ -40,6 +40,7 @@ type FileContents = ParsedFigmaBlob | ParsedFigmaHTML
 export function FigmaFile({ data }: { data: FileContents }) {
   const [navSelection, setNavSelection] = useViewerNavigation(data)
   const [sceneSelection, setSceneSelection] = useState<GUID>()
+  const [sceneHover, setSceneHover] = useState<GUID>()
   const [focusRequest, setFocusRequest] = useState(0)
   const content = useRef<HTMLDivElement>(null)
   useLayoutEffect(() => {
@@ -84,6 +85,7 @@ export function FigmaFile({ data }: { data: FileContents }) {
             setNavSelection={setNavSelection}
             imageCount={assets.length}
             hasThumbnail={"preview" in data && !!data.preview}
+            hovered={navSelection.type === "preview" ? sceneHover : undefined}
             selected={
               navSelection.type === "layer"
                 ? navSelection.guid
@@ -110,6 +112,7 @@ export function FigmaFile({ data }: { data: FileContents }) {
           selected={sceneSelection}
           focusRequest={focusRequest}
           onSelect={setSceneSelection}
+          onHover={setSceneHover}
         />
       ) : (
         <div ref={content} className="h-full overflow-y-auto">
@@ -316,6 +319,7 @@ function Sidebar({
   imageCount,
   hasThumbnail,
   selected,
+  hovered,
   onSelect,
 }: {
   type: "paste" | "file"
@@ -325,6 +329,7 @@ function Sidebar({
   imageCount: number
   hasThumbnail: boolean
   selected?: GUID
+  hovered?: GUID
   onSelect: (guid: GUID) => void
 }) {
   const { nodeChanges = [] } = message
@@ -396,6 +401,7 @@ function Sidebar({
         <NodeTree
           nodes={nodeChanges}
           selected={selected}
+          hovered={hovered}
           focusSelection={navSelection.type !== "preview"}
           onSelect={onSelect}
         />

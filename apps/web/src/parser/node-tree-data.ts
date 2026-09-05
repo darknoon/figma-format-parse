@@ -9,6 +9,18 @@ export interface TreeRow {
   siblings: number
 }
 
+/** Keep hover visible without opening or scrolling collapsed branches. */
+export function visibleHoverId(
+  id: string | undefined,
+  byId: ReadonlyMap<string, TreeNode>,
+  visibleIds: ReadonlySet<string>
+) {
+  while (id) {
+    if (visibleIds.has(id)) return id
+    id = byId.get(id)?.parentId
+  }
+}
+
 export function visibleTreeRows(
   roots: TreeNode[],
   expanded: ReadonlySet<string>
