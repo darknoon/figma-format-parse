@@ -29,6 +29,7 @@ import { ImageBrowser } from "./image-browser"
 import { imageAssets } from "./image-assets"
 import { indexBlobReferences } from "./blob-references"
 import { SiblingPosition } from "./sibling-position"
+import { SplitView } from "@/components/split-view"
 
 type FileContents = ParsedFigmaBlob | ParsedFigmaHTML
 
@@ -77,11 +78,8 @@ export function FigmaFile({ data }: { data: FileContents }) {
     [imageEntries, message]
   )
   return (
-    <div className="flex h-dvh w-full overflow-hidden">
-      <nav
-        aria-label="File sections"
-        className="h-full w-48 shrink-0 overflow-y-auto border-r-gray-200 border-r sm:w-64 lg:w-80"
-      >
+    <SplitView sidebar={
+      <nav aria-label="File sections" className="h-full overflow-y-auto">
         <Sidebar
           type={type}
           message={data.message}
@@ -90,7 +88,7 @@ export function FigmaFile({ data }: { data: FileContents }) {
           imageCount={assets.length}
         />
       </nav>
-      <div className="min-w-0 flex-1">
+    }>
         <div ref={content} className="h-full overflow-y-auto">
           <div className="p-4 sm:p-8">
             {navSelection.type === "meta" && "meta" in data && (
@@ -178,8 +176,7 @@ export function FigmaFile({ data }: { data: FileContents }) {
             )}
           </div>
         </div>
-      </div>
-    </div>
+    </SplitView>
   )
 }
 
