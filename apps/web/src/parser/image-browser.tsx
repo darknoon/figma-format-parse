@@ -101,7 +101,11 @@ export function ImageBrowser({
                 </span>
                 <span className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
                   <span>{formatSize(asset.entry.size)}</span>
-                  <ReferenceCount count={asset.references?.length ?? 0} />
+                  {asset.isPreview ? (
+                    <span>Preview</span>
+                  ) : (
+                    <ReferenceCount count={asset.references?.length ?? 0} />
+                  )}
                 </span>
               </span>
             </button>

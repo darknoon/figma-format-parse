@@ -1,8 +1,6 @@
 import * as React from "react"
 import { useLayoutEffect, useMemo, useRef, useState } from "react"
 
-import { fromByteArray } from "base64-js"
-
 import type { Schema } from "kiwi-schema"
 import { prettyPrintSchema } from "kiwi-schema"
 import {
@@ -25,7 +23,6 @@ import { replacerForHex } from "./hex"
 import { HexView } from "./hex-view"
 import { Button } from "@/components/ui/button"
 import { compileSchema } from "kiwi-schema"
-import { ImagePreview } from "./image-lightbox"
 import { ImageBrowser } from "./image-browser"
 import { imageAssets } from "./image-assets"
 import { indexBlobReferences } from "./blob-references"
@@ -71,9 +68,10 @@ export function FigmaFile({ data }: { data: FileContents }) {
   } = message
   const type = "meta" in data ? "paste" : "file"
   const imageEntries = "imageEntries" in data ? data.imageEntries : undefined
+  const preview = "preview" in data ? data.preview : undefined
   const assets = useMemo(
-    () => imageAssets(imageEntries ?? [], message),
-    [imageEntries, message]
+    () => imageAssets(imageEntries ?? [], message, preview),
+    [imageEntries, message, preview]
   )
   return (
     <SplitView
@@ -85,7 +83,6 @@ export function FigmaFile({ data }: { data: FileContents }) {
             navSelection={navSelection}
             setNavSelection={setNavSelection}
             imageCount={assets.length}
-            hasThumbnail={"preview" in data && !!data.preview}
             hovered={navSelection.type === "preview" ? sceneHover : undefined}
             selected={
               navSelection.type === "layer"
@@ -145,31 +142,6 @@ export function FigmaFile({ data }: { data: FileContents }) {
             {navSelection.type === "schema" && "header" in data && (
               <Schema schema={data.schema} header={data.header} />
             )}
-            {navSelection.type === "thumbnail" &&
-              "preview" in data &&
-              data.preview && (
-                <Card>
-                  <CardHeader>
-                    <h2 className="text-lg tracking-tight">
-                      Exported thumbnail
-                    </h2>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-col space-y-4">
-                      <p className="text-xs text-gray-700 dark:text-gray-400">
-                        {data.preview.length} bytes
-                      </p>
-                      <ImagePreview
-                        alt="File preview"
-                        src={`data:image/png;base64,${fromByteArray(
-                          data.preview
-                        )}`}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
             {navSelection.type === "blobs" && blobs && (
               <Blobs
                 message={message}
@@ -183,7 +155,7 @@ export function FigmaFile({ data }: { data: FileContents }) {
                 }
               />
             )}
-            {navSelection.type === "images" && imageEntries && (
+            {navSelection.type === "images" && (
               <ImageBrowser
                 assets={assets}
                 onSelect={(guid) => {
@@ -324,7 +296,6 @@ function Sidebar({
   navSelection,
   setNavSelection,
   imageCount,
-  hasThumbnail,
   selected,
   hovered,
   onSelect,
@@ -334,7 +305,6 @@ function Sidebar({
   navSelection: NavSelection
   setNavSelection: (navSelection: NavSelection) => void
   imageCount: number
-  hasThumbnail: boolean
   selected?: GUID
   hovered?: GUID
   onSelect: (guid: GUID) => void
@@ -359,14 +329,6 @@ function Sidebar({
           >
             Preview
           </SidebarItem>
-          {hasThumbnail && (
-            <SidebarItem
-              onClick={() => setNavSelection({ type: "thumbnail" })}
-              selected={navSelection.type === "thumbnail"}
-            >
-              Thumbnail
-            </SidebarItem>
-          )}
           <SidebarItem
             onClick={() => setNavSelection({ type: "schema" })}
             selected={navSelection.type === "schema"}

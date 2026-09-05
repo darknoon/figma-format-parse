@@ -8,7 +8,6 @@ type FileContents = ParsedFigmaBlob | ParsedFigmaHTML
 export type NavSelection =
   | { type: "layer"; guid: GUID; blob?: { index: number; path: string } }
   | { type: "preview" }
-  | { type: "thumbnail" }
   | { type: "meta" }
   | { type: "misc" }
   | { type: "blobs" }
@@ -56,11 +55,12 @@ function readSelection(hash: string, data: FileContents): NavSelection {
     case "preview":
       return { type: view }
     case "thumbnail":
-      if ("preview" in data && data.preview) return { type: view }
-      break
     case "images":
-      if ("imageEntries" in data && data.imageEntries?.length)
-        return { type: view }
+      if (
+        ("preview" in data && data.preview?.length) ||
+        ("imageEntries" in data && data.imageEntries?.length)
+      )
+        return { type: "images" }
       break
     case "blobs":
     case "schema":

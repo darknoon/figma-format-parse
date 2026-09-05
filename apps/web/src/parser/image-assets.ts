@@ -14,12 +14,14 @@ export interface ImageAsset {
   name: string
   references?: ImageReference[]
   thumbnail?: FigmaImageEntry
+  isPreview?: boolean
 }
 
 /** Pair assets using Figma's image hashes, without reading any image bytes. */
 export function imageAssets(
   entries: FigmaImageEntry[],
-  message: Message
+  message: Message,
+  preview?: Uint8Array
 ): ImageAsset[] {
   const byName = new Map(entries.map((entry) => [entry.name, entry]))
   const names = new Map<string, string>()
@@ -68,7 +70,7 @@ export function imageAssets(
       }
     }
   }
-  return entries
+  const assets: ImageAsset[] = entries
     .filter(
       (entry) => !pairedThumbnails.has(entry.name) || originals.has(entry.name)
     )
@@ -82,6 +84,25 @@ export function imageAssets(
           ? entry
           : undefined),
     }))
+  if (preview?.length) {
+    const blob = new Blob([new Uint8Array(preview)], { type: "image/png" })
+    const entry: FigmaImageEntry = {
+      name: "file-preview.png",
+      size: preview.length,
+      compressedSize: preview.length,
+      read: async (signal) => {
+        signal?.throwIfAborted()
+        return blob
+      },
+    }
+    assets.unshift({
+      entry,
+      thumbnail: entry,
+      name: "File preview",
+      isPreview: true,
+    })
+  }
+  return assets
 }
 
 /** Load only declared thumbnails, once per entry, with at most four reads at a time. */

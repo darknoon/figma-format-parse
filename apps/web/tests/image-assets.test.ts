@@ -27,6 +27,26 @@ function message(original: number, thumbnail: number): Message {
   }
 }
 
+test("places the file preview before embedded images and opens the same PNG", async () => {
+  const preview = new Uint8Array([137, 80, 78, 71])
+  const assets = imageAssets([entry(1), entry(2)], message(1, 2), preview)
+  expect(assets.map((asset) => asset.name)).toEqual([
+    "File preview",
+    "Image name",
+  ])
+  expect(assets[0].isPreview).toBe(true)
+  expect(assets[0].references).toBeUndefined()
+  expect(assets[0].thumbnail).toBe(assets[0].entry)
+  const blob = await assets[0].entry.read()
+  expect(blob.type).toBe("image/png")
+  expect(new Uint8Array(await blob.arrayBuffer())).toEqual(preview)
+})
+
+test("shows a preview even when no embedded images exist", () => {
+  expect(imageAssets([], {}, new Uint8Array([1]))).toHaveLength(1)
+  expect(imageAssets([], {}, new Uint8Array())).toHaveLength(0)
+})
+
 test("pairs by hash, displaying one card whose click target is the original", () => {
   const original = entry(1)
   const thumbnail = entry(2)
