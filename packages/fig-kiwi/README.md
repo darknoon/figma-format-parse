@@ -64,9 +64,14 @@ and does not package external image assets into a ZIP.
 For browser file inputs, use the asynchronous Blob reader to avoid reading the
 entire ZIP into memory. It reads the ZIP directory, `canvas.fig`, and
 `thumbnail.png` directly from byte ranges of the original File. External image
-entries are not extracted or decompressed.
+entries are listed as `imageEntries` without being extracted or decompressed.
+Each entry includes its name, size, compressed size, and an asynchronous `read`
+function. Call it only when the image is needed; it returns a Blob and accepts an
+optional AbortSignal. Retaining these entries retains access to the original File.
 
 ```ts
 import { readFigFileBlob } from "fig-kiwi/blob";
 const parsed = await readFigFileBlob(fileInput.files[0]);
+// On selection, load just that image (the caller owns any object URL it creates).
+const image = await parsed.imageEntries?.[0]?.read();
 ```
