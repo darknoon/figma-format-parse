@@ -28,6 +28,7 @@ import { imageAssets } from "./image-assets"
 import { indexBlobReferences } from "./blob-references"
 import { FigmaRenderer } from "fig-renderer"
 import { SiblingPosition } from "./sibling-position"
+import { ResponsiveSetInfo } from "./responsive-set"
 import { SplitView } from "@/components/split-view"
 import { useViewerNavigation, type NavSelection } from "./use-viewer-navigation"
 import { BlobContent } from "./blob-content"
@@ -558,6 +559,7 @@ function NodeContent({
         <FigmaLink href={href} />
       </CardHeader>
       <CardContent className="pt-6">
+        <ResponsiveSetInfo node={node} nodes={nodes ?? []} onSelect={onSelect} />
         <h3>Other fields as JSON ({decoded.length} characters)</h3>
         <CodeView>
           {referenceRange ? (

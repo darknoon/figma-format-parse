@@ -48,6 +48,8 @@ export function abbreviateType(type: string) {
       return "CANV"
     case "FRAME":
       return "FRAME"
+    case "RESPONSIVE_SET":
+      return "RESP"
     case "BOOLEAN_OPERATION":
       return "BO"
     case "VECTOR":
@@ -102,7 +104,7 @@ export function abbreviateType(type: string) {
 }
 
 function colorType(type: string): string {
-  switch (type as NodeType | "PATH" | "NET" | "GLYPH") {
+  switch (type as NodeType | "PATH" | "NET" | "GLYPH" | "RESPONSIVE_SET") {
     case "DOCUMENT":
       return "bg-gray-100 text-gray-800" // light grey
     case "CANVAS":
@@ -110,6 +112,7 @@ function colorType(type: string): string {
     case "GROUP":
       return "bg-yellow-200 text-yellow-800" // light yellow
     case "FRAME":
+    case "RESPONSIVE_SET":
       return "bg-blue-200 text-blue-800" // light blue
     case "BOOLEAN_OPERATION":
       return "bg-purple-200 text-purple-800" // light purple
@@ -170,6 +173,7 @@ function colorType(type: string): string {
 export function TypePill({ type }: { type: string }) {
   return (
     <span
+      title={type}
       className={cn(
         "block mr-2 rounded-md text-ellipsis w-12 text-center self-baseline px-1 py-0.5 text-xs font-medium",
         colorType(type)

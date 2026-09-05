@@ -274,6 +274,26 @@ describe("scene layout and camera", () => {
     expect(scene.pages[0].bounds?.x).toBe(0)
     expect(scene.pages[1].bounds?.x).toBe(9999)
   })
+  test("responsive sets preserve breakpoint transforms and honor overflow settings", () => {
+    const set = node(1, 0, {
+      type: "RESPONSIVE_SET" as NodeChange["type"],
+      transform: { ...identity, m02: 5301 },
+      frameMaskDisabled: true,
+    })
+    const nodes = [
+      node(0, undefined, { type: "CANVAS", size: undefined }),
+      set,
+      node(2, 1, { transform: { ...identity, m02: 64, m12: 100 } }),
+      node(3, 1, { transform: { ...identity, m02: 1408, m12: 100 } }),
+    ]
+    const scene = buildScene({ nodeChanges: nodes })
+    expect(
+      scene.byId.get("0:1")?.children.map((child) => child.world.m02)
+    ).toEqual([5365, 6709])
+    expect(scene.pages[0].bounds?.width).toBe(1508)
+    set.frameMaskDisabled = false
+    expect(buildScene({ nodeChanges: nodes }).pages[0].bounds?.width).toBe(100)
+  })
   test("inverse transforms round trip skew, translation and scale", () => {
     const matrix = { m00: 2, m01: 0.5, m02: 42, m10: 0.3, m11: 3, m12: -80 }
     const p = point(multiply(inverse(matrix)!, matrix), 12, 34)

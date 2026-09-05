@@ -72,8 +72,9 @@ export function transformedBounds(
 
 export function clipsChildren(node: NodeChange) {
   return (
-    ["FRAME", "SYMBOL", "INSTANCE"].includes(node.type ?? "") &&
-    node.frameMaskDisabled !== true
+    ["FRAME", "SYMBOL", "INSTANCE", "RESPONSIVE_SET"].includes(
+      node.type ?? ""
+    ) && node.frameMaskDisabled !== true
   )
 }
 
