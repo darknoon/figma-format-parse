@@ -167,11 +167,11 @@ function SelectedImage({
 
   if (error) {
     return (
-      <div className="max-w-lg space-y-4 text-center">
+      <div className="max-w-lg space-y-4 p-6 text-center">
         <p role="alert">{error}</p>
         <button
           type="button"
-          className="rounded-md border border-white/40 px-4 py-2"
+          className="rounded-md border px-4 py-2"
           onClick={() => setAttempt(attempt + 1)}
         >
           Try again
@@ -179,7 +179,7 @@ function SelectedImage({
       </div>
     )
   }
-  if (!url) return <p role="status">Loading image…</p>
+  if (!url) return <p role="status" className="px-6 py-4">Loading image…</p>
   return (
     <img
       src={url}

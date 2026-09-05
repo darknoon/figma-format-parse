@@ -31,22 +31,31 @@ export function ImageLightbox({
         event.preventDefault()
         onClose()
       }}
-      className="fixed inset-0 m-0 h-dvh max-h-none w-screen max-w-none bg-black/90 p-4 text-white backdrop:bg-black/60 sm:p-8"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose()
+      }}
+      className="fixed inset-0 m-0 h-dvh max-h-none w-screen max-w-none bg-transparent p-8 text-foreground backdrop:bg-black/20"
     >
-      <div className="flex h-full flex-col gap-4">
-        <div className="flex items-center justify-between gap-4">
-          <h2 id={titleId} className="min-w-0 truncate text-sm font-medium">
+      <div
+        className="flex h-full items-center justify-center"
+        onClick={(event) => {
+          if (event.target === event.currentTarget) onClose()
+        }}
+      >
+        <div className="relative max-w-full rounded-sm bg-card text-card-foreground shadow-xl [&_img]:block [&_img]:max-h-[calc(100dvh-4rem)] [&_img]:max-w-[calc(100vw-4rem)]">
+          <h2 id={titleId} className="sr-only">
             {title}
           </h2>
+          {children}
           <button
             type="button"
             onClick={onClose}
             aria-label="Close image"
-            className="shrink-0 rounded-md p-2 hover:bg-white/15 focus-visible:outline-2 focus-visible:outline-white"
+            className="absolute -right-3 -top-3 flex h-8 w-8 items-center justify-center rounded-full bg-card text-card-foreground shadow-md hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
             <svg
-              width="24"
-              height="24"
+              width="16"
+              height="16"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -56,14 +65,6 @@ export function ImageLightbox({
               <path d="m6 6 12 12M6 18 18 6" />
             </svg>
           </button>
-        </div>
-        <div
-          className="flex min-h-0 flex-1 items-center justify-center"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) onClose()
-          }}
-        >
-          {children}
         </div>
       </div>
     </dialog>,
