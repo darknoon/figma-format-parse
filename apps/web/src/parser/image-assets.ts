@@ -18,7 +18,7 @@ export interface ImageAsset {
   isPreview?: boolean
 }
 
-function imageId(image?: Image) {
+export function imageId(image?: Image) {
   return image?.dataBlob !== undefined
     ? `blob:${image.dataBlob}`
     : image?.hash && hex(image.hash)
