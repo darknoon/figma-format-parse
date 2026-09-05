@@ -5,6 +5,8 @@ import type { NodeChange } from "fig-kiwi/schema-defs"
 import {
   decodeCommands,
   decodeVectorNetwork,
+  inspectCommands,
+  inspectVectorNetwork,
   identity,
   inverse,
   multiply,
@@ -73,6 +75,22 @@ describe("stored geometry", () => {
   test("handles byte views with a nonzero offset", () => {
     const wrapped = new Uint8Array([255, ...commands([1, 2, 3]), 255])
     expect(decodeCommands(wrapped.subarray(1, -1))).toBe("M2 3")
+  })
+  test("preserves byte offsets and leading close records for inspection", () => {
+    const bytes = commands([0], [1, 1.25, -2.5], [4, 1, 2, 3, 4, 5, 6], [0])
+    const wrapped = new Uint8Array([255, ...bytes, 255])
+    const decoded = inspectCommands(wrapped.subarray(1, -1))!
+    expect(decoded.path).toBe(decodeCommands(bytes)!)
+    expect(
+      decoded.commands.map((c) => [c.offset, c.byteLength, c.verb])
+    ).toEqual([
+      [0, 1, "Z"],
+      [1, 9, "M"],
+      [10, 25, "C"],
+      [35, 1, "Z"],
+    ])
+    expect(decoded.commands[1].values).toEqual([1.25, -2.5])
+    expect(inspectCommands(bytes.subarray(0, 34))).toBeUndefined()
   })
   test("decodes every cached path in the repository's exported circle fixture", () => {
     const file = readFigFile(
@@ -153,6 +171,31 @@ describe("stored geometry", () => {
     expect(decodeVectorNetwork(bytes)?.fill).toBe(
       "M0 0 C10 20 90 20 100 0 L0 100 L0 0 Z"
     )
+    // Preserve uninterpreted style words and exact record locations.
+    view.setUint32(12, 0x10203040, true)
+    view.setUint32(48, 9, true)
+    const wrapped = new Uint8Array([255, ...bytes, 255])
+    const inspected = inspectVectorNetwork(wrapped.subarray(1, -1))!
+    expect(inspected.vertices[0]).toEqual({
+      offset: 12,
+      style: 0x10203040,
+      x: 0,
+      y: 0,
+    })
+    expect(inspected.segments[0]).toEqual({
+      offset: 48,
+      style: 9,
+      start: 0,
+      end: 1,
+      tx: 10,
+      ty: 20,
+      ex: -10,
+      ey: 20,
+    })
+    expect(inspected.regions).toEqual([
+      { offset: 132, flags: 1, loops: [{ offset: 140, segments: [0, 2, 1] }] },
+    ])
+    expect(inspectVectorNetwork(new Uint8Array([...bytes, 0]))).toBeUndefined()
     expect(decodeVectorNetwork(bytes.slice(0, -1))).toBeUndefined()
     view.setUint32(12 + 3 * 12 + 4, 99, true)
     expect(decodeVectorNetwork(bytes)).toBeUndefined()

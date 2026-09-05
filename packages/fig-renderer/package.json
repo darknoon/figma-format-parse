@@ -21,7 +21,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "bun test ./tests",
-    "build": "tsc -p tsconfig.build.json && cp src/renderer.css dist/renderer.css"
+    "build": "tsc -p tsconfig.build.json && cp src/*.css dist/"
   },
   "dependencies": {
     "fig-kiwi": "workspace:*"

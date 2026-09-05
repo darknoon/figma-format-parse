@@ -4,14 +4,31 @@ import type { Matrix, NodeChange, Vector } from "fig-kiwi/schema-defs"
  * Glyphs use the same format, in em units with Y pointing up.
  * Fail the entire path on unknown/truncated data instead of drawing corruption.
  */
-export function decodeCommands(bytes: Uint8Array): string | undefined {
+export interface PathCommand {
+  offset: number
+  byteLength: number
+  opcode: number
+  verb: "Z" | "M" | "L" | "Q" | "C"
+  values: number[]
+}
+
+export interface DecodedCommands {
+  path: string
+  commands: PathCommand[]
+}
+
+export function inspectCommands(
+  bytes: Uint8Array
+): DecodedCommands | undefined {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
   const commands: string[] = []
-  const names = ["Z", "M", "L", "Q", "C"]
+  const records: PathCommand[] = []
+  const names = ["Z", "M", "L", "Q", "C"] as const
   const counts = [0, 2, 2, 4, 6]
   let offset = 0
   let started = false
   while (offset < bytes.length) {
+    const start = offset
     const opcode = bytes[offset++]
     const count = counts[opcode]
     if (count === undefined || offset + count * 4 > bytes.length) return
@@ -23,8 +40,19 @@ export function decodeCommands(bytes: Uint8Array): string | undefined {
     }
     if (opcode === 1) started = true
     if (started) commands.push(names[opcode] + values.join(" "))
+    records.push({
+      offset: start,
+      byteLength: offset - start,
+      opcode,
+      verb: names[opcode],
+      values,
+    })
   }
-  return commands.join(" ")
+  return { path: commands.join(" "), commands: records }
+}
+
+export function decodeCommands(bytes: Uint8Array): string | undefined {
+  return inspectCommands(bytes)?.path
 }
 
 export const identity: Matrix = {
@@ -122,9 +150,41 @@ export function primitivePath(node: NodeChange): string {
  * end, tangent); then regions containing lists of segment indices.
  * Cached paths remain preferable: they already include corner rounding/strokes.
  */
-export function decodeVectorNetwork(
+export interface NetworkVertex {
+  offset: number
+  style: number
+  x: number
+  y: number
+}
+
+export interface NetworkSegment {
+  offset: number
+  style: number
+  start: number
+  end: number
+  tx: number
+  ty: number
+  ex: number
+  ey: number
+}
+
+export interface NetworkRegion {
+  offset: number
+  flags: number
+  loops: { offset: number; segments: number[] }[]
+}
+
+export interface DecodedVectorNetwork {
+  fill: string
+  stroke: string
+  vertices: NetworkVertex[]
+  segments: NetworkSegment[]
+  regions: NetworkRegion[]
+}
+
+export function inspectVectorNetwork(
   bytes: Uint8Array
-): { fill: string; stroke: string } | undefined {
+): DecodedVectorNetwork | undefined {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
   let offset = 0
   const u32 = () => {
@@ -146,11 +206,13 @@ export function decodeVectorNetwork(
       regionCount = u32()
     if (12 + vertexCount * 12 + segmentCount * 28 > bytes.length) return
     const vertices = Array.from({ length: vertexCount }, () => {
-      u32()
-      return { x: f32(), y: f32() }
+      const start = offset
+      const style = u32()
+      return { offset: start, style, x: f32(), y: f32() }
     })
     const segments = Array.from({ length: segmentCount }, () => {
-      u32()
+      const recordOffset = offset
+      const style = u32()
       const start = u32(),
         tx = f32(),
         ty = f32(),
@@ -159,7 +221,7 @@ export function decodeVectorNetwork(
         ey = f32()
       if (start >= vertexCount || end >= vertexCount)
         throw new Error("Invalid vertex")
-      return { start, end, tx, ty, ex, ey }
+      return { offset: recordOffset, style, start, end, tx, ty, ex, ey }
     })
     function contour(indices: number[]) {
       const remaining = new Set(indices)
@@ -213,25 +275,39 @@ export function decodeVectorNetwork(
       return commands.join(" ")
     }
     const fills: string[] = []
+    const regions: NetworkRegion[] = []
     if (regionCount > bytes.length / 8) return
     for (let i = 0; i < regionCount; i++) {
-      u32() // region style/winding flags; even-odd fallback preserves holes
+      const region: NetworkRegion = { offset, flags: u32(), loops: [] }
       const loops = u32()
       if (loops > bytes.length / 4) return
       for (let j = 0; j < loops; j++) {
+        const loopOffset = offset
         const count = u32()
         if (count > (bytes.length - offset) / 4) return
         const indices = Array.from({ length: count }, u32)
+        region.loops.push({ offset: loopOffset, segments: indices })
         fills.push(contour(indices))
       }
+      regions.push(region)
     }
     if (offset !== bytes.length) return
     const stroke = contour(segments.map((_, i) => i))
     return {
       fill: fills.length ? fills.join(" ") : stroke,
       stroke,
+      vertices,
+      segments,
+      regions,
     }
   } catch {
     return
   }
+}
+
+export function decodeVectorNetwork(
+  bytes: Uint8Array
+): { fill: string; stroke: string } | undefined {
+  const network = inspectVectorNetwork(bytes)
+  if (network) return { fill: network.fill, stroke: network.stroke }
 }

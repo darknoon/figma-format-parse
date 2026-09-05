@@ -35,6 +35,22 @@ binary geometry decoders. It imports neither React nor CSS and works in non-brow
 tests. `buildNodeTree` is shared with the web app so sibling ordering and parent links
 remain consistent.
 
+`BlobInspector` renders a standalone geometry preview with decoded-record
+and raw-byte views. Pass `bytes`, `kind` (`"path"`, `"vector-network"`, or
+`"unknown"`) based on the field referencing the blob, and `glyph` for Y-up glyph
+outlines. Supply `renderDetails(content, onClose)` to open the records in the host’s
+lightbox when the preview is clicked, and `renderBytes` to reuse the host’s hex view.
+The `references` slot can be a function of the expanded state so the card shows a
+capped list and the lightbox shows every reference. Network previews can show
+vertices and Bézier handles. Decoding is deferred
+until a card approaches the viewport; record tables are paginated and created only
+when expanded. Unknown or malformed data retains its raw-byte view.
+
+`inspectCommands` and `inspectVectorNetwork` from `fig-renderer/core` expose the same
+decoders' records, including byte offsets and uninterpreted style/flag words. The
+inspector rounds displayed coordinates to seven significant digits for readability;
+raw bytes preserve the original float32 values.
+
 ## Geometry and text
 
 Saved node transforms and sizes are authoritative; the renderer does not run auto

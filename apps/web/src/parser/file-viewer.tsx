@@ -20,7 +20,8 @@ import { GUID, NodeChange } from "fig-kiwi/schema-defs"
 import { cn } from "@/lib/utils"
 import { NodeTree } from "./node-tree"
 import { CodeView } from "./code-view"
-import { hex, replacerForHex } from "./hex"
+import { replacerForHex } from "./hex"
+import { HexView } from "./hex-view"
 import { Button } from "@/components/ui/button"
 import { compileSchema } from "kiwi-schema"
 import { ImagePreview } from "./image-lightbox"
@@ -31,6 +32,8 @@ import { FigmaRenderer } from "fig-renderer"
 import { SiblingPosition } from "./sibling-position"
 import { SplitView } from "@/components/split-view"
 import { useViewerNavigation, type NavSelection } from "./use-viewer-navigation"
+import { BlobContent } from "./blob-content"
+import { assetCardClassName, assetGridClassName } from "./asset-gallery"
 
 type FileContents = ParsedFigmaBlob | ParsedFigmaHTML
 
@@ -82,7 +85,11 @@ export function FigmaFile({ data }: { data: FileContents }) {
             imageCount={assets.length}
             hasThumbnail={"preview" in data && !!data.preview}
             selected={
-              navSelection.type === "layer" ? navSelection.guid : sceneSelection
+              navSelection.type === "layer"
+                ? navSelection.guid
+                : navSelection.type === "preview"
+                  ? sceneSelection
+                  : undefined
             }
             onSelect={(guid) => {
               setSceneSelection(guid)
@@ -223,58 +230,20 @@ function Blobs({
     [message, schema]
   )
   return (
-    <div className="flex flex-col space-y-4">
+    <div className={assetGridClassName}>
       {message.blobs?.map((b, i) => (
-        <Card key={i}>
-          <CardHeader>
-            <h2>
-              Blob {i}{" "}
-              <span className="font-medium">({b.bytes.length} bytes)</span>
-            </h2>
-            {references.has(i) ? (
-              <div className="space-y-1 text-sm">
-                <p className="text-muted-foreground">Referenced by</p>
-                <ul className="space-y-1">
-                  {references.get(i)!.map((reference) => (
-                    <li key={`${reference.nodeIndex}:${reference.path}`}>
-                      {reference.guid ? (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            onSelect(reference.guid!, i, reference.path)
-                          }
-                          className="flex max-w-full flex-wrap items-baseline gap-x-2 rounded-sm text-left underline underline-offset-2 hover:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2"
-                        >
-                          <span>
-                            {reference.nodeName} ({formatGUID(reference.guid)})
-                          </span>
-                          <code className="break-all text-xs">
-                            {reference.path}
-                          </code>
-                        </button>
-                      ) : (
-                        <span className="break-all text-muted-foreground">
-                          {reference.nodeName} · nodeChanges[
-                          {reference.nodeIndex}].
-                          {reference.path}
-                        </span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                No node references found.
-              </p>
-            )}
-          </CardHeader>
-          <CardContent>
-            <span className="font-mono font-xs text-gray-700 dark:text-gray-400">
-              {hex(b.bytes, " ")}
-            </span>
-          </CardContent>
-        </Card>
+        <section
+          key={i}
+          aria-label={`Blob ${i}`}
+          className={assetCardClassName}
+        >
+          <BlobContent
+            bytes={b.bytes}
+            index={i}
+            references={references.get(i)}
+            onSelect={onSelect}
+          />
+        </section>
       ))}
     </div>
   )
@@ -401,8 +370,12 @@ function Sidebar({
           <SidebarItem
             onClick={() => setNavSelection({ type: "blobs" })}
             selected={navSelection.type === "blobs"}
+            className="flex items-center justify-between gap-2"
           >
-            Blobs
+            <span>Blobs</span>
+            <span className="min-w-6 rounded-full bg-background/70 px-2 py-0.5 text-center text-xs tabular-nums text-muted-foreground">
+              {message.blobs?.length ?? 0}
+            </span>
           </SidebarItem>
           {imageCount > 0 && (
             <SidebarItem
@@ -595,9 +568,7 @@ function NodeContent({
         {data && (
           <>
             <h3>As kiwi ({data.length} bytes)</h3>
-            <p className="font-xs font-mono text-gray-700 dark:text-gray-400">
-              {hex(data, " ")}
-            </p>
+            <HexView bytes={data} />
           </>
         )}
       </CardContent>
