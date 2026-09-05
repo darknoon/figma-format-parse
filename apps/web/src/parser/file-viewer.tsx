@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label"
 import { GUID, NodeChange } from "fig-kiwi/schema-defs"
 import { cn } from "@/lib/utils"
 import { NodeTree } from "./node-tree"
+import { TypePill } from "./type-pill"
 import { CodeView } from "./code-view"
 import { jsonFieldRange } from "./json-field-range"
 import { replacerForHex } from "./hex"
@@ -47,6 +48,9 @@ export function FigmaFile({ data }: { data: FileContents }) {
   }, [navSelection])
   const node =
     navSelection.type === "layer" && selectedNode(data.message, navSelection)
+  const previewNode = sceneSelection
+    ? selectedNode(data.message, { type: "layer", guid: sceneSelection })
+    : undefined
   const parentGuid =
     node && node.parentIndex
       ? selectedNode(data.message, {
@@ -105,15 +109,31 @@ export function FigmaFile({ data }: { data: FileContents }) {
       }
     >
       {navSelection.type === "preview" ? (
-        <FigmaRenderer
-          message={message}
-          imageEntries={imageEntries}
-          selected={sceneSelection}
-          focusRequest={focusRequest}
-          onSelect={setSceneSelection}
-          onHover={setSceneHover}
-          onOpenImages={() => setNavSelection({ type: "images" })}
-        />
+        <div className={cn("relative h-full", previewNode && "[&_.fig-renderer__status]:top-auto [&_.fig-renderer__status]:bottom-16")}>
+          <FigmaRenderer
+            message={message}
+            imageEntries={imageEntries}
+            selected={sceneSelection}
+            focusRequest={focusRequest}
+            onSelect={setSceneSelection}
+            onHover={setSceneHover}
+            onOpenImages={() => setNavSelection({ type: "images" })}
+          />
+          {previewNode && (
+            <aside
+              aria-label="Selected node"
+              className="absolute right-4 top-4 z-10 flex max-w-[calc(100%-2rem)] items-center gap-2 rounded-xl border bg-card/95 px-3 py-2 text-sm shadow-sm backdrop-blur-sm"
+            >
+              <TypePill type={previewNode.type ?? ""} />
+              <span className="max-w-48 truncate" title={previewNode.name}>
+                {previewNode.name || "Untitled"}
+              </span>
+              <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                {formatGUID(previewNode.guid!)}
+              </span>
+            </aside>
+          )}
+        </div>
       ) : (
         <div ref={content} className="h-full overflow-y-auto">
           <div className="p-4 sm:p-8">
