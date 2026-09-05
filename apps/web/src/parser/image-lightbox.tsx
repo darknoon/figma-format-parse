@@ -3,10 +3,12 @@ import { createPortal } from "react-dom"
 
 export function ImageLightbox({
   title,
+  closeLabel = "Close image",
   onClose,
   children,
 }: {
   title: string
+  closeLabel?: string
   onClose: () => void
   children: ReactNode
 }) {
@@ -50,7 +52,7 @@ export function ImageLightbox({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close image"
+            aria-label={closeLabel}
             className="absolute -right-3 -top-3 flex h-8 w-8 items-center justify-center rounded-full bg-card text-card-foreground shadow-md hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
             <svg

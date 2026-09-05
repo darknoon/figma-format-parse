@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useLayoutEffect, useMemo, useRef } from "react"
+import { useLayoutEffect, useMemo, useRef, useState } from "react"
 
 import { fromByteArray } from "base64-js"
 
@@ -20,33 +20,40 @@ import { GUID, NodeChange } from "fig-kiwi/schema-defs"
 import { cn } from "@/lib/utils"
 import { NodeTree } from "./node-tree"
 import { CodeView } from "./code-view"
-import { hex, replacerForHex } from "./hex"
+import { replacerForHex } from "./hex"
+import { HexView } from "./hex-view"
 import { Button } from "@/components/ui/button"
 import { compileSchema } from "kiwi-schema"
 import { ImagePreview } from "./image-lightbox"
 import { ImageBrowser } from "./image-browser"
 import { imageAssets } from "./image-assets"
 import { indexBlobReferences } from "./blob-references"
+import { FigmaRenderer } from "fig-renderer"
 import { SiblingPosition } from "./sibling-position"
 import { SplitView } from "@/components/split-view"
 import { useViewerNavigation, type NavSelection } from "./use-viewer-navigation"
+import { BlobContent } from "./blob-content"
+import { assetCardClassName, assetGridClassName } from "./asset-gallery"
 
 type FileContents = ParsedFigmaBlob | ParsedFigmaHTML
 
 export function FigmaFile({ data }: { data: FileContents }) {
   const [navSelection, setNavSelection] = useViewerNavigation(data)
+  const [sceneSelection, setSceneSelection] = useState<GUID>()
+  const [focusRequest, setFocusRequest] = useState(0)
   const content = useRef<HTMLDivElement>(null)
   useLayoutEffect(() => {
     content.current?.scrollTo({ top: 0, left: 0 })
   }, [navSelection])
   const node =
     navSelection.type === "layer" && selectedNode(data.message, navSelection)
-  const parentGuid = node && node.parentIndex
-    ? selectedNode(data.message, {
-        type: "layer",
-        guid: node.parentIndex.guid,
-      })?.guid
-    : undefined
+  const parentGuid =
+    node && node.parentIndex
+      ? selectedNode(data.message, {
+          type: "layer",
+          guid: node.parentIndex.guid,
+        })?.guid
+      : undefined
   const { message } = data
   const {
     nodeChanges = [],
@@ -67,17 +74,44 @@ export function FigmaFile({ data }: { data: FileContents }) {
     [imageEntries, message]
   )
   return (
-    <SplitView sidebar={
-      <nav aria-label="File sections" className="h-full overflow-y-auto">
-        <Sidebar
-          type={type}
-          message={data.message}
-          navSelection={navSelection}
-          setNavSelection={setNavSelection}
-          imageCount={assets.length}
+    <SplitView
+      sidebar={
+        <nav aria-label="File sections" className="h-full overflow-y-auto">
+          <Sidebar
+            type={type}
+            message={data.message}
+            navSelection={navSelection}
+            setNavSelection={setNavSelection}
+            imageCount={assets.length}
+            hasThumbnail={"preview" in data && !!data.preview}
+            selected={
+              navSelection.type === "layer"
+                ? navSelection.guid
+                : navSelection.type === "preview"
+                  ? sceneSelection
+                  : undefined
+            }
+            onSelect={(guid) => {
+              setSceneSelection(guid)
+              if (navSelection.type === "preview") {
+                setFocusRequest((value) => value + 1)
+              } else {
+                setNavSelection({ type: "layer", guid })
+              }
+            }}
+          />
+        </nav>
+      }
+    >
+      {navSelection.type === "preview" ? (
+        <FigmaRenderer
+          message={message}
+          imageEntries={imageEntries}
+          selected={sceneSelection}
+          focusRequest={focusRequest}
+          onSelect={setSceneSelection}
         />
-      </nav>
-    }>
+      ) : (
         <div ref={content} className="h-full overflow-y-auto">
           <div className="p-4 sm:p-8">
             {navSelection.type === "meta" && "meta" in data && (
@@ -107,12 +141,14 @@ export function FigmaFile({ data }: { data: FileContents }) {
             {navSelection.type === "schema" && "header" in data && (
               <Schema schema={data.schema} header={data.header} />
             )}
-            {navSelection.type === "preview" &&
+            {navSelection.type === "thumbnail" &&
               "preview" in data &&
               data.preview && (
                 <Card>
                   <CardHeader>
-                    <h2 className="text-lg tracking-tight">Preview</h2>
+                    <h2 className="text-lg tracking-tight">
+                      Exported thumbnail
+                    </h2>
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-col space-y-4">
@@ -135,7 +171,11 @@ export function FigmaFile({ data }: { data: FileContents }) {
                 message={message}
                 schema={data.schema}
                 onSelect={(guid, index, path) =>
-                  setNavSelection({ type: "layer", guid, blob: { index, path } })
+                  setNavSelection({
+                    type: "layer",
+                    guid,
+                    blob: { index, path },
+                  })
                 }
               />
             )}
@@ -147,10 +187,16 @@ export function FigmaFile({ data }: { data: FileContents }) {
                 node={node}
                 nodes={data.message.nodeChanges}
                 schema={data.schema}
-                onSelect={(guid) => setNavSelection({ type: "layer", guid })}
+                onSelect={(guid) => {
+                  setSceneSelection(guid)
+                  setNavSelection({ type: "layer", guid })
+                }}
                 onOpenParent={
                   parentGuid
-                    ? () => setNavSelection({ type: "layer", guid: parentGuid })
+                    ? () => {
+                        setSceneSelection(parentGuid)
+                        setNavSelection({ type: "layer", guid: parentGuid })
+                      }
                     : undefined
                 }
                 blobReference={
@@ -165,11 +211,16 @@ export function FigmaFile({ data }: { data: FileContents }) {
             )}
           </div>
         </div>
+      )}
     </SplitView>
   )
 }
 
-function Blobs({ message, schema, onSelect }: {
+function Blobs({
+  message,
+  schema,
+  onSelect,
+}: {
   message: Message
   schema: Schema
   onSelect: (guid: GUID, blob: number, path: string) => void
@@ -179,57 +230,20 @@ function Blobs({ message, schema, onSelect }: {
     [message, schema]
   )
   return (
-    <div className="flex flex-col space-y-4">
+    <div className={assetGridClassName}>
       {message.blobs?.map((b, i) => (
-        <Card key={i}>
-          <CardHeader>
-            <h2>
-              Blob {i}{" "}
-              <span className="font-medium">({b.bytes.length} bytes)</span>
-            </h2>
-            {references.has(i) ? (
-              <div className="space-y-1 text-sm">
-                <p className="text-muted-foreground">Referenced by</p>
-                <ul className="space-y-1">
-                  {references.get(i)!.map((reference) => (
-                    <li key={`${reference.nodeIndex}:${reference.path}`}>
-                      {reference.guid ? (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            onSelect(reference.guid!, i, reference.path)
-                          }
-                          className="flex max-w-full flex-wrap items-baseline gap-x-2 rounded-sm text-left underline underline-offset-2 hover:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2"
-                        >
-                          <span>
-                            {reference.nodeName} ({formatGUID(reference.guid)})
-                          </span>
-                          <code className="break-all text-xs">
-                            {reference.path}
-                          </code>
-                        </button>
-                      ) : (
-                        <span className="break-all text-muted-foreground">
-                          {reference.nodeName} · nodeChanges[{reference.nodeIndex}].
-                          {reference.path}
-                        </span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                No node references found.
-              </p>
-            )}
-          </CardHeader>
-          <CardContent>
-            <span className="font-mono font-xs text-gray-700 dark:text-gray-400">
-              {hex(b.bytes, " ")}
-            </span>
-          </CardContent>
-        </Card>
+        <section
+          key={i}
+          aria-label={`Blob ${i}`}
+          className={assetCardClassName}
+        >
+          <BlobContent
+            bytes={b.bytes}
+            index={i}
+            references={references.get(i)}
+            onSelect={onSelect}
+          />
+        </section>
       ))}
     </div>
   )
@@ -300,12 +314,18 @@ function Sidebar({
   navSelection,
   setNavSelection,
   imageCount,
+  hasThumbnail,
+  selected,
+  onSelect,
 }: {
   type: "paste" | "file"
   message: Message
   navSelection: NavSelection
   setNavSelection: (navSelection: NavSelection) => void
   imageCount: number
+  hasThumbnail: boolean
+  selected?: GUID
+  onSelect: (guid: GUID) => void
 }) {
   const { nodeChanges = [] } = message
   return (
@@ -321,12 +341,18 @@ function Sidebar({
               Paste Info
             </SidebarItem>
           )}
-          {type === "file" && (
+          <SidebarItem
+            onClick={() => setNavSelection({ type: "preview" })}
+            selected={navSelection.type === "preview"}
+          >
+            Preview
+          </SidebarItem>
+          {hasThumbnail && (
             <SidebarItem
-              onClick={() => setNavSelection({ type: "preview" })}
-              selected={navSelection.type === "preview"}
+              onClick={() => setNavSelection({ type: "thumbnail" })}
+              selected={navSelection.type === "thumbnail"}
             >
-              Preview
+              Thumbnail
             </SidebarItem>
           )}
           <SidebarItem
@@ -344,8 +370,12 @@ function Sidebar({
           <SidebarItem
             onClick={() => setNavSelection({ type: "blobs" })}
             selected={navSelection.type === "blobs"}
+            className="flex items-center justify-between gap-2"
           >
-            Blobs
+            <span>Blobs</span>
+            <span className="min-w-6 rounded-full bg-background/70 px-2 py-0.5 text-center text-xs tabular-nums text-muted-foreground">
+              {message.blobs?.length ?? 0}
+            </span>
           </SidebarItem>
           {imageCount > 0 && (
             <SidebarItem
@@ -365,8 +395,9 @@ function Sidebar({
         <h2 className="font-medium p-2 text-sm">Nodes</h2>
         <NodeTree
           nodes={nodeChanges}
-          selected={navSelection.type === "layer" ? navSelection.guid : undefined}
-          onSelect={(guid) => setNavSelection({ type: "layer", guid })}
+          selected={selected}
+          focusSelection={navSelection.type !== "preview"}
+          onSelect={onSelect}
         />
       </div>
     </div>
@@ -389,8 +420,7 @@ const SidebarItem = React.forwardRef<
           className,
           "w-full rounded-sm p-1 pl-2 pr-3 text-left focus-visible:outline-2 focus-visible:-outline-offset-2",
           "hover:bg-gray-200 dark:hover:bg-gray-800",
-          selected &&
-            "bg-gray-200 text-foreground dark:bg-gray-800"
+          selected && "bg-gray-200 text-foreground dark:bg-gray-800"
         )}
         {...props}
       >
@@ -496,8 +526,12 @@ function NodeContent({
               <path d="M7 17 17 7M7 7h10v10" />
             </svg>
           </button>
-        ) : formatGUID(parentIndex.guid)
-      ) : "None",
+        ) : (
+          formatGUID(parentIndex.guid)
+        )
+      ) : (
+        "None"
+      ),
     },
   ]
   return (
@@ -534,9 +568,7 @@ function NodeContent({
         {data && (
           <>
             <h3>As kiwi ({data.length} bytes)</h3>
-            <p className="font-xs font-mono text-gray-700 dark:text-gray-400">
-              {hex(data, " ")}
-            </p>
+            <HexView bytes={data} />
           </>
         )}
       </CardContent>

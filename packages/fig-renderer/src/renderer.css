@@ -1,0 +1,129 @@
+.fig-renderer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  color: #111827;
+  background: #fff;
+  font-family: inherit;
+}
+.fig-renderer *,
+.fig-renderer *::before,
+.fig-renderer *::after {
+  box-sizing: border-box;
+}
+.fig-renderer__navigation {
+  position: absolute;
+  z-index: 2;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: white;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms;
+}
+.fig-renderer {
+  position: relative;
+}
+.fig-renderer:hover .fig-renderer__navigation,
+.fig-renderer:focus-within .fig-renderer__navigation {
+  opacity: 1;
+  pointer-events: auto;
+}
+@media (hover: none) {
+  .fig-renderer__navigation {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+.fig-renderer__button {
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 4px;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  line-height: 20px;
+  cursor: pointer;
+}
+.fig-renderer__button:hover {
+  background: #f3f4f6;
+}
+.fig-renderer__button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.fig-renderer__button:focus-visible {
+  outline: 2px solid #3b82f6;
+}
+.fig-renderer__zoom {
+  min-width: 56px;
+  font-variant-numeric: tabular-nums;
+}
+.fig-renderer__status {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  color: #6b7280;
+  font-size: 14px;
+}
+.fig-renderer__viewport {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  outline: none;
+}
+.fig-renderer__viewport:focus-visible {
+  box-shadow: inset 0 0 0 2px #60a5fa;
+}
+.fig-renderer__svg {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.fig-renderer__empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.fig-renderer__zoom-menu {
+  position: relative;
+}
+.fig-renderer__zoom-options {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  right: 0;
+  width: 190px;
+  padding: 4px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: white;
+  box-shadow: 0 4px 16px #0001;
+}
+.fig-renderer__zoom-options button {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  text-align: left;
+}
+.fig-renderer__zoom-options kbd {
+  color: #9ca3af;
+  font: inherit;
+}

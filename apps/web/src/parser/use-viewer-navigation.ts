@@ -8,6 +8,7 @@ type FileContents = ParsedFigmaBlob | ParsedFigmaHTML
 export type NavSelection =
   | { type: "layer"; guid: GUID; blob?: { index: number; path: string } }
   | { type: "preview" }
+  | { type: "thumbnail" }
   | { type: "meta" }
   | { type: "misc" }
   | { type: "blobs" }
@@ -39,7 +40,12 @@ function readSelection(hash: string, data: FileContents): NavSelection {
       const selection: NavSelection = { type: "layer", guid: node.guid }
       const blob = params.get("blob")
       const path = params.get("path")
-      if (blob && /^\d+$/.test(blob) && path && data.message.blobs?.[Number(blob)]) {
+      if (
+        blob &&
+        /^\d+$/.test(blob) &&
+        path &&
+        data.message.blobs?.[Number(blob)]
+      ) {
         selection.blob = { index: Number(blob), path }
       }
       return selection
@@ -48,19 +54,20 @@ function readSelection(hash: string, data: FileContents): NavSelection {
       if ("meta" in data) return { type: view }
       break
     case "preview":
+      return { type: view }
+    case "thumbnail":
       if ("preview" in data && data.preview) return { type: view }
       break
     case "images":
-      if ("imageEntries" in data && data.imageEntries?.length) return { type: view }
+      if ("imageEntries" in data && data.imageEntries?.length)
+        return { type: view }
       break
     case "blobs":
     case "schema":
     case "misc":
       return { type: view }
   }
-  return {
-    type: "meta" in data ? "meta" : data.preview ? "preview" : "misc",
-  }
+  return { type: "preview" }
 }
 
 export function useViewerNavigation(data: FileContents) {
@@ -90,14 +97,17 @@ export function useViewerNavigation(data: FileContents) {
     }
   }, [data])
 
-  const navigate = useCallback((next: NavSelection) => {
-    const resolved = readSelection(selectionHash(next), data)
-    const hash = selectionHash(resolved)
-    if (window.location.hash === hash) return
-    // Only the location is stored; the parsed document and assets stay in memory.
-    window.history.pushState(null, "", hash)
-    setSelection(resolved)
-  }, [data])
+  const navigate = useCallback(
+    (next: NavSelection) => {
+      const resolved = readSelection(selectionHash(next), data)
+      const hash = selectionHash(resolved)
+      if (window.location.hash === hash) return
+      // Only the location is stored; the parsed document and assets stay in memory.
+      window.history.pushState(null, "", hash)
+      setSelection(resolved)
+    },
+    [data]
+  )
 
   return [selection, navigate] as const
 }
