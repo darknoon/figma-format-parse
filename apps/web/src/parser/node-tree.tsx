@@ -127,7 +127,7 @@ export function NodeTree({
             style={{ paddingLeft: 4 + (level - 1) * 16 }}
             className={cn(
               "flex min-w-0 cursor-default items-center rounded-sm py-1 pr-2 hover:bg-gray-200 dark:hover:bg-gray-800 focus-visible:outline-2 focus-visible:-outline-offset-2",
-              item.id === selectedId && "bg-gray-200 dark:bg-gray-800"
+              item.id === selectedId && "bg-gray-200 text-foreground dark:bg-gray-800"
             )}
           >
             {hasChildren ? (

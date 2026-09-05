@@ -397,7 +397,7 @@ const SidebarItem = React.forwardRef<
           "w-full rounded-sm p-1 pl-2 pr-3 text-left focus-visible:outline-2 focus-visible:-outline-offset-2",
           "hover:bg-gray-200 dark:hover:bg-gray-800",
           selected &&
-            "bg-gray-200 dark:bg-gray-800 text-black dark: text-grey-200"
+            "bg-gray-200 text-foreground dark:bg-gray-800"
         )}
         {...props}
       >
