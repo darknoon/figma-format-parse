@@ -8,7 +8,6 @@ const shapes: Record<string, ReactNode> = {
   SECTION: <path d="M2 4h5l1.5-2H14v12H2z" />,
   RESPONSIVE_SET: <><rect x="1.5" y="2.5" width="9" height="9" rx=".5" /><rect x="11.5" y="6.5" width="3" height="7" rx=".5" /><path d="M4 14h4" /></>,
   TEXT: <path d="M2.5 4V2.5h11V4M8 2.5v11M5.5 13.5h5" />,
-  RECTANGLE: <rect x="2.5" y="2.5" width="11" height="11" />,
   ROUNDED_RECTANGLE: <rect x="2.5" y="2.5" width="11" height="11" rx="2" />,
   ELLIPSE: <circle cx="8" cy="8" r="5.5" />,
   LINE: <path d="m2.5 13.5 11-11" />,
@@ -28,7 +27,7 @@ export function NodeTypeIcon({ type }: { type: string }) {
   return (
     <span title={type.replace(/_/g, " ").toLowerCase()} className={`mr-2 flex h-5 w-4 items-center justify-center ${type === "SYMBOL" || type === "INSTANCE" ? "text-purple-500" : "text-muted-foreground"}`}>
       <svg role="img" aria-label={type} width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
-        {shapes[type] ?? <rect x="2.5" y="2.5" width="11" height="11" rx="1" />}
+        {shapes[type === "RECTANGLE" ? "ROUNDED_RECTANGLE" : type] ?? <rect x="2.5" y="2.5" width="11" height="11" rx="1" />}
       </svg>
     </span>
   )
