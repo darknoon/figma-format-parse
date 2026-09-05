@@ -44,12 +44,9 @@ export function SiblingPosition({ node, nodes, onSelect }: {
 
   return (
     <div>
-      <div className="w-40 max-w-full px-2" title={`Sibling range: ${percent(start)}–${percent(end)} · ${siblings.length} nodes`}>
+      <div className="w-40 max-w-full" title={`Sibling range: ${percent(start)}–${percent(end)} · ${siblings.length} nodes`}>
         <div role="group" aria-label="Sibling positions" className="relative h-6">
-          <div aria-hidden="true" className="absolute inset-x-0 top-1/2 h-0.5 -translate-y-1/2 rounded-full bg-slate-400" />
-          {[0, 25, 50, 75, 100].map((tick) => (
-            <div key={tick} aria-hidden="true" style={{ left: `${tick}%` }} className="absolute top-1/2 h-2 w-px -translate-y-1/2 bg-slate-400" />
-          ))}
+          <div aria-hidden="true" className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-slate-400" />
           {siblings.map((sibling) => {
             const selected = nodeId(sibling.guid) === selectedId
             return (
@@ -66,10 +63,10 @@ export function SiblingPosition({ node, nodes, onSelect }: {
                   selected ? "z-10" : "hover:z-20",
                 )}
               >
-                <span className={cn(
-                  "rounded-full ring-2 ring-card group-hover:scale-125",
-                  selected ? "h-2.5 w-2.5 bg-blue-600" : "h-1.5 w-1.5 bg-foreground",
-                )} />
+                <span className={selected
+                  ? "h-3 w-0.5 bg-blue-600"
+                  : "h-2 w-px bg-muted-foreground group-hover:bg-foreground"
+                } />
               </button>
             )
           })}
