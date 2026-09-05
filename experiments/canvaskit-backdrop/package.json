@@ -1,0 +1,11 @@
+{
+  "name": "canvaskit-backdrop-experiment",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun server.ts"
+  },
+  "dependencies": {
+    "canvaskit-wasm": "0.42.0"
+  }
+}
